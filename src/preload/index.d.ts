@@ -6,6 +6,7 @@ type OllamaProgress =
           status: "checking" | "downloading" | "starting" | "ready" | "error";
           percent?: number;
           message?: string;
+          version?: string;
       }
     | {
           phase: "model";

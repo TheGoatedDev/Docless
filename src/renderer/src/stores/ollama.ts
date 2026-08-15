@@ -6,6 +6,7 @@ export type OllamaProgress =
           status: "checking" | "downloading" | "starting" | "ready" | "error";
           percent?: number;
           message?: string;
+          version?: string;
       }
     | {
           phase: "model";
@@ -67,7 +68,10 @@ export const useOllama = create<State>((set, get) => ({
                     // ponytail: terminal progress unblocks UI; runOp also clears busy
                     ...(done ? { busy: false } : {}),
                     ...(e.phase === "runtime" && e.status === "ready"
-                        ? { running: true }
+                        ? {
+                              running: true,
+                              ...(e.version ? { version: e.version } : {}),
+                          }
                         : {}),
                     ...(e.phase === "model" && e.status === "ready"
                         ? { modelPresent: true, ready: true }

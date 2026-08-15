@@ -13,6 +13,7 @@ export type OllamaProgress =
           status: "checking" | "downloading" | "starting" | "ready" | "error";
           percent?: number;
           message?: string;
+          version?: string;
       }
     | {
           phase: "model";
@@ -117,11 +118,35 @@ const pullModel = async (): Promise<void> => {
     emit({ phase: "model", status: "ready", percent: 100 });
 };
 
+const diskVersion = async (): Promise<string | null> => {
+    const downloaded = await client().downloadedVersions();
+    // ponytail: tags sort ok enough; no semver dep
+    return downloaded.sort().at(-1) ?? null;
+};
+
+const apiVersion = async (): Promise<string | null> => {
+    try {
+        const res = await fetch(`${HOST}/api/version`);
+        if (!res.ok) return null;
+        const data = (await res.json()) as { version?: string };
+        return data.version ?? null;
+    } catch {
+        return null;
+    }
+};
+
+const resolveVersion = async (): Promise<string | null> =>
+    (await apiVersion()) ?? (await diskVersion());
+
 const ensureRuntime = async (): Promise<void> => {
     emit({ phase: "runtime", status: "checking" });
     const c = client();
     if (await c.isRunning()) {
-        emit({ phase: "runtime", status: "ready" });
+        emit({
+            phase: "runtime",
+            status: "ready",
+            version: (await resolveVersion()) ?? undefined,
+        });
         return;
     }
 
@@ -146,7 +171,12 @@ const ensureRuntime = async (): Promise<void> => {
         },
     });
     owned = true;
-    emit({ phase: "runtime", status: "ready", percent: 100 });
+    emit({
+        phase: "runtime",
+        status: "ready",
+        percent: 100,
+        version: (await resolveVersion()) ?? meta.version,
+    });
 };
 
 const ensureModel = async (): Promise<void> => {
@@ -216,22 +246,12 @@ export async function getOllamaStatus(): Promise<OllamaStatus> {
     let version: string | null = null;
     try {
         const c = client();
-        const downloaded = await c.downloadedVersions();
-        installed = downloaded.length > 0;
-        // ponytail: tags sort ok enough; no semver dep
-        version = downloaded.sort().at(-1) ?? null;
+        version = await diskVersion();
+        installed = version != null;
         running = await c.isRunning();
         if (running) {
             modelPresent = await hasModel();
-            try {
-                const res = await fetch(`${HOST}/api/version`);
-                if (res.ok) {
-                    const data = (await res.json()) as { version?: string };
-                    if (data.version) version = data.version;
-                }
-            } catch {
-                /* keep disk version */
-            }
+            version = (await apiVersion()) ?? version;
         }
     } catch {
         /* offline */
