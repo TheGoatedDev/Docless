@@ -4,7 +4,7 @@ import { createRootRoute, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createRootRoute({
     beforeLoad: async ({ location }) => {
-        await useOllama.getState().hydrate();
+        await useOllama.getState().boot();
         const { running, ready } = useOllama.getState();
         const path = location.pathname;
 

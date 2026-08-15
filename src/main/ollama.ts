@@ -28,6 +28,8 @@ export type OllamaStatus = {
     modelPresent: boolean;
     owned: boolean;
     busy: boolean;
+    /** electron-ollama binary already on disk (skip setup wizard if so) */
+    installed: boolean;
 };
 
 let eo: ElectronOllama | null = null;
@@ -208,13 +210,16 @@ export async function reinstallOllama(): Promise<{ ok: true }> {
 export async function getOllamaStatus(): Promise<OllamaStatus> {
     let running = false;
     let modelPresent = false;
+    let installed = false;
     try {
-        running = await client().isRunning();
+        const c = client();
+        installed = (await c.downloadedVersions()).length > 0;
+        running = await c.isRunning();
         if (running) modelPresent = await hasModel();
     } catch {
         /* offline */
     }
-    return { running, modelPresent, owned, busy };
+    return { running, modelPresent, owned, busy, installed };
 }
 
 export async function stopOllamaIfOwned(): Promise<void> {

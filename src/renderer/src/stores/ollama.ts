@@ -22,12 +22,15 @@ type State = {
     running: boolean;
     modelPresent: boolean;
     owned: boolean;
+    installed: boolean;
     phase: "idle" | "runtime" | "model";
     status: string;
     percent: number | null;
     message: string;
     error: string | null;
     hydrate: () => Promise<void>;
+    /** Start runtime + model when binary already present; no-op if ready */
+    boot: () => Promise<void>;
     ensureRuntime: () => Promise<void>;
     ensureModel: () => Promise<void>;
     reinstall: () => Promise<void>;
@@ -41,6 +44,7 @@ export const useOllama = create<State>((set, get) => ({
     running: false,
     modelPresent: false,
     owned: false,
+    installed: false,
     phase: "idle",
     status: "idle",
     percent: null,
@@ -75,8 +79,18 @@ export const useOllama = create<State>((set, get) => ({
             running: s.running,
             modelPresent: s.modelPresent,
             owned: s.owned,
+            installed: s.installed,
             ready: s.running && s.modelPresent,
         });
+    },
+
+    boot: async () => {
+        await get().hydrate();
+        const { ready, installed, running } = get();
+        if (ready || !installed) return;
+        // ponytail: binary on disk — start quietly, setup only for first install
+        if (!running) await get().ensureRuntime();
+        if (!get().ready) await get().ensureModel();
     },
 
     ensureRuntime: async () => {
@@ -104,6 +118,7 @@ async function runOp(
             running: s.running,
             modelPresent: s.modelPresent,
             owned: s.owned,
+            installed: s.installed,
             busy: false,
             ready: s.running && s.modelPresent,
         });
