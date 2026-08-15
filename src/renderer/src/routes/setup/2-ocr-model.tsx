@@ -18,7 +18,7 @@ function StepOcrModel(): React.JSX.Element {
         message,
         error,
         hydrate,
-        ensure,
+        ensureModel,
     } = useOllama();
 
     useEffect(() => {
@@ -42,7 +42,7 @@ function StepOcrModel(): React.JSX.Element {
                 <Button
                     type="button"
                     disabled={busy}
-                    onClick={() => void ensure()}
+                    onClick={() => void ensureModel()}
                 >
                     {busy
                         ? "Working…"

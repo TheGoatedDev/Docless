@@ -27,9 +27,11 @@ const api = {
             ipcRenderer.invoke("settings:set", data),
     },
     ollama: {
-        ensure: (): Promise<{ ready: true }> =>
-            ipcRenderer.invoke("ollama:ensure"),
-        reinstall: (): Promise<{ ready: true }> =>
+        ensureRuntime: (): Promise<{ ok: true }> =>
+            ipcRenderer.invoke("ollama:ensure-runtime"),
+        ensureModel: (): Promise<{ ok: true }> =>
+            ipcRenderer.invoke("ollama:ensure-model"),
+        reinstall: (): Promise<{ ok: true }> =>
             ipcRenderer.invoke("ollama:reinstall"),
         status: (): Promise<{
             running: boolean;

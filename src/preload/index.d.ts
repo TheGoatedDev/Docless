@@ -27,8 +27,9 @@ declare global {
                 ) => Promise<Record<string, unknown>>;
             };
             ollama: {
-                ensure: () => Promise<{ ready: true }>;
-                reinstall: () => Promise<{ ready: true }>;
+                ensureRuntime: () => Promise<{ ok: true }>;
+                ensureModel: () => Promise<{ ok: true }>;
+                reinstall: () => Promise<{ ok: true }>;
                 status: () => Promise<{
                     running: boolean;
                     modelPresent: boolean;

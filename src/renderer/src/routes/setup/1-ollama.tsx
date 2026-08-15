@@ -9,8 +9,16 @@ export const Route = createFileRoute("/setup/1-ollama")({
 
 function StepOllama(): React.JSX.Element {
     const navigate = useNavigate();
-    const { busy, running, status, percent, message, error, hydrate, ensure } =
-        useOllama();
+    const {
+        busy,
+        running,
+        status,
+        percent,
+        message,
+        error,
+        hydrate,
+        ensureRuntime,
+    } = useOllama();
 
     useEffect(() => {
         void hydrate();
@@ -33,7 +41,7 @@ function StepOllama(): React.JSX.Element {
                 <Button
                     type="button"
                     disabled={busy}
-                    onClick={() => void ensure()}
+                    onClick={() => void ensureRuntime()}
                 >
                     {busy
                         ? "Working…"

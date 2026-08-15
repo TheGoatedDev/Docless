@@ -28,7 +28,8 @@ type State = {
     message: string;
     error: string | null;
     hydrate: () => Promise<void>;
-    ensure: () => Promise<void>;
+    ensureRuntime: () => Promise<void>;
+    ensureModel: () => Promise<void>;
     reinstall: () => Promise<void>;
 };
 
@@ -73,8 +74,12 @@ export const useOllama = create<State>((set, get) => ({
         });
     },
 
-    ensure: async () => {
-        await runOp(() => window.api.ollama.ensure(), set);
+    ensureRuntime: async () => {
+        await runOp(() => window.api.ollama.ensureRuntime(), set);
+    },
+
+    ensureModel: async () => {
+        await runOp(() => window.api.ollama.ensureModel(), set);
     },
 
     reinstall: async () => {
@@ -86,7 +91,7 @@ async function runOp(
     op: () => Promise<unknown>,
     set: (partial: Partial<State>) => void,
 ): Promise<void> {
-    set({ busy: true, error: null, ready: false });
+    set({ busy: true, error: null });
     try {
         await op();
         const s = await window.api.ollama.status();
@@ -95,10 +100,7 @@ async function runOp(
             modelPresent: s.modelPresent,
             owned: s.owned,
             busy: false,
-            ready: true,
-            phase: "model",
-            status: "ready",
-            percent: 100,
+            ready: s.running && s.modelPresent,
         });
     } catch (e) {
         set({

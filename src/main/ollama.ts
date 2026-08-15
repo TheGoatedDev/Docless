@@ -166,30 +166,34 @@ const deleteModel = async (): Promise<void> => {
     }
 };
 
-const runBusy = async (fn: () => Promise<void>): Promise<{ ready: true }> => {
+const runBusy = async (
+    phase: OllamaProgress["phase"],
+    fn: () => Promise<void>,
+): Promise<{ ok: true }> => {
     if (busy) throw new Error("ollama operation already running");
     busy = true;
     try {
         await fn();
-        return { ready: true };
+        return { ok: true };
     } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        emit({ phase: "runtime", status: "error", message });
+        emit({ phase, status: "error", message });
         throw e;
     } finally {
         busy = false;
     }
 };
 
-export async function ensureOllama(): Promise<{ ready: true }> {
-    return runBusy(async () => {
-        await ensureRuntime();
-        await ensureModel();
-    });
+export async function ensureOllamaRuntime(): Promise<{ ok: true }> {
+    return runBusy("runtime", ensureRuntime);
 }
 
-export async function reinstallOllama(): Promise<{ ready: true }> {
-    return runBusy(async () => {
+export async function ensureOllamaModel(): Promise<{ ok: true }> {
+    return runBusy("model", ensureModel);
+}
+
+export async function reinstallOllama(): Promise<{ ok: true }> {
+    return runBusy("runtime", async () => {
         await stopOllamaIfOwned();
         rmSync(join(app.getPath("userData"), RUNTIME_DIR), {
             recursive: true,
@@ -220,7 +224,8 @@ export async function stopOllamaIfOwned(): Promise<void> {
 }
 
 export function registerOllamaIpc(): void {
-    ipcMain.handle("ollama:ensure", () => ensureOllama());
+    ipcMain.handle("ollama:ensure-runtime", () => ensureOllamaRuntime());
+    ipcMain.handle("ollama:ensure-model", () => ensureOllamaModel());
     ipcMain.handle("ollama:reinstall", () => reinstallOllama());
     ipcMain.handle("ollama:status", () => getOllamaStatus());
 }
