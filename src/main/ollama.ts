@@ -224,8 +224,15 @@ export async function stopOllamaIfOwned(): Promise<void> {
 }
 
 export function registerOllamaIpc(): void {
-    ipcMain.handle("ollama:ensure-runtime", () => ensureOllamaRuntime());
-    ipcMain.handle("ollama:ensure-model", () => ensureOllamaModel());
-    ipcMain.handle("ollama:reinstall", () => reinstallOllama());
-    ipcMain.handle("ollama:status", () => getOllamaStatus());
+    // ponytail: remove first so main HMR / re-entry never leaves half-registered channels
+    const handlers = {
+        "ollama:ensure-runtime": () => ensureOllamaRuntime(),
+        "ollama:ensure-model": () => ensureOllamaModel(),
+        "ollama:reinstall": () => reinstallOllama(),
+        "ollama:status": () => getOllamaStatus(),
+    } as const;
+    for (const [channel, fn] of Object.entries(handlers)) {
+        ipcMain.removeHandler(channel);
+        ipcMain.handle(channel, fn);
+    }
 }
