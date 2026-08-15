@@ -46,6 +46,10 @@ const api = {
             };
         },
     },
+    notify: {
+        show: (p: { title: string; body?: string }): Promise<boolean> =>
+            ipcRenderer.invoke("notify:show", p),
+    },
 };
 
 if (process.contextIsolated) {

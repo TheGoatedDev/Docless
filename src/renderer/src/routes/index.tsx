@@ -1,4 +1,5 @@
 import { Button } from "@renderer/components/ui/button";
+import { notify } from "@renderer/lib/notify";
 import { createFileRoute } from "@tanstack/react-router";
 import { useStore } from "../stores/store";
 
@@ -20,6 +21,19 @@ function Index(): React.JSX.Element {
                 </Button>
                 <Button type="button" variant="secondary" onClick={inc}>
                     Count: {count}
+                </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                        notify({
+                            title: "Hello",
+                            description: "Focus app = toast, blur = OS",
+                            type: "success",
+                        })
+                    }
+                >
+                    Notify
                 </Button>
             </div>
         </div>

@@ -37,6 +37,9 @@ declare global {
                 }>;
                 onProgress: (cb: (e: OllamaProgress) => void) => () => void;
             };
+            notify: {
+                show: (p: { title: string; body?: string }) => Promise<boolean>;
+            };
         };
     }
 }
