@@ -1,0 +1,71 @@
+name: rc
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rc-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.meta.outputs.should_build }}
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        env:
+          HEAD_MSG: ${{ github.event.head_commit.message || '' }}
+          RUN_NUMBER: ${{ github.run_number }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          BASE=$(node -p "require('./package.json').version")
+          SHA7="${SHA:0:7}"
+
+          should_build=true
+          if [[ "$HEAD_MSG" == *": release "* ]]; then
+            echo "skip RC: release-please commit"
+            should_build=false
+          fi
+
+          version="${BASE}-rc.${RUN_NUMBER}.${SHA7}"
+          {
+            echo "should_build=${should_build}"
+            echo "version=${version}"
+            echo "tag=v${version}"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: meta
+    if: needs.meta.outputs.should_build == 'true'
+    uses: ./.github/workflows/build-electron.yml
+    with:
+      version: ${{ needs.meta.outputs.version }}
+      stamp_version: true
+
+  publish:
+    needs: [meta, build]
+    if: needs.meta.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.meta.outputs.tag }}
+          name: RC ${{ needs.meta.outputs.version }}
+          prerelease: true
+          make_latest: false
+          files: artifacts/*
