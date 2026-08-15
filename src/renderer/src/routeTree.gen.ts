@@ -10,33 +10,76 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SetupRouteRouteImport } from './routes/setup/route'
+import { Route as SetupIndexRouteImport } from './routes/setup/index'
+import { Route as Setup1OllamaRouteImport } from './routes/setup/1-ollama'
+import { Route as Setup2OcrModelRouteImport } from './routes/setup/2-ocr-model'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SetupRouteRoute = SetupRouteRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupIndexRoute = SetupIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SetupRouteRoute,
+} as any)
+const Setup1OllamaRoute = Setup1OllamaRouteImport.update({
+  id: '/1-ollama',
+  path: '/1-ollama',
+  getParentRoute: () => SetupRouteRoute,
+} as any)
+const Setup2OcrModelRoute = Setup2OcrModelRouteImport.update({
+  id: '/2-ocr-model',
+  path: '/2-ocr-model',
+  getParentRoute: () => SetupRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/setup': typeof SetupRouteRouteWithChildren
+  '/setup/1-ollama': typeof Setup1OllamaRoute
+  '/setup/2-ocr-model': typeof Setup2OcrModelRoute
+  '/setup/': typeof SetupIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/setup/1-ollama': typeof Setup1OllamaRoute
+  '/setup/2-ocr-model': typeof Setup2OcrModelRoute
+  '/setup': typeof SetupIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/setup': typeof SetupRouteRouteWithChildren
+  '/setup/1-ollama': typeof Setup1OllamaRoute
+  '/setup/2-ocr-model': typeof Setup2OcrModelRoute
+  '/setup/': typeof SetupIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/setup' | '/setup/1-ollama' | '/setup/2-ocr-model' | '/setup/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/setup/1-ollama' | '/setup/2-ocr-model' | '/setup'
+  id:
+    | '__root__'
+    | '/'
+    | '/setup'
+    | '/setup/1-ollama'
+    | '/setup/2-ocr-model'
+    | '/setup/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SetupRouteRoute: typeof SetupRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +91,56 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup/': {
+      id: '/setup/'
+      path: '/'
+      fullPath: '/setup/'
+      preLoaderRoute: typeof SetupIndexRouteImport
+      parentRoute: typeof SetupRouteRoute
+    }
+    '/setup/1-ollama': {
+      id: '/setup/1-ollama'
+      path: '/1-ollama'
+      fullPath: '/setup/1-ollama'
+      preLoaderRoute: typeof Setup1OllamaRouteImport
+      parentRoute: typeof SetupRouteRoute
+    }
+    '/setup/2-ocr-model': {
+      id: '/setup/2-ocr-model'
+      path: '/2-ocr-model'
+      fullPath: '/setup/2-ocr-model'
+      preLoaderRoute: typeof Setup2OcrModelRouteImport
+      parentRoute: typeof SetupRouteRoute
+    }
   }
 }
 
+interface SetupRouteRouteChildren {
+  Setup1OllamaRoute: typeof Setup1OllamaRoute
+  Setup2OcrModelRoute: typeof Setup2OcrModelRoute
+  SetupIndexRoute: typeof SetupIndexRoute
+}
+
+const SetupRouteRouteChildren: SetupRouteRouteChildren = {
+  Setup1OllamaRoute: Setup1OllamaRoute,
+  Setup2OcrModelRoute: Setup2OcrModelRoute,
+  SetupIndexRoute: SetupIndexRoute,
+}
+
+const SetupRouteRouteWithChildren = SetupRouteRoute._addFileChildren(
+  SetupRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SetupRouteRoute: SetupRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
