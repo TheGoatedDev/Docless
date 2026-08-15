@@ -58,11 +58,21 @@ export const useOllama = create<State>((set, get) => ({
         if (!listening) {
             listening = true;
             window.api.ollama.onProgress((e) => {
+                const cur = get();
+                // ponytail: ignore late starting/downloading after ready
+                if (
+                    cur.status === "ready" &&
+                    e.phase === cur.phase &&
+                    e.status !== "ready" &&
+                    e.status !== "error"
+                ) {
+                    return;
+                }
                 const done = e.status === "ready" || e.status === "error";
                 set({
                     phase: e.phase,
                     status: e.status,
-                    percent: e.percent ?? get().percent,
+                    percent: e.percent ?? cur.percent,
                     message: e.message ?? "",
                     error: e.status === "error" ? (e.message ?? "error") : null,
                     // ponytail: terminal progress unblocks UI; runOp also clears busy
@@ -81,13 +91,23 @@ export const useOllama = create<State>((set, get) => ({
         }
         const s = await window.api.ollama.status();
         // ponytail: never overwrite busy from status — stale hydrate races runOp
+        const healthy = s.running && s.modelPresent;
         set({
             running: s.running,
             modelPresent: s.modelPresent,
             owned: s.owned,
             installed: s.installed,
             version: s.version,
-            ready: s.running && s.modelPresent,
+            ready: healthy,
+            // clear stale "starting" when already healthy
+            ...(!get().busy && healthy
+                ? {
+                      phase: "idle" as const,
+                      status: "idle",
+                      message: "",
+                      percent: null,
+                  }
+                : {}),
         });
     },
 
@@ -121,6 +141,7 @@ async function runOp(
     try {
         await op();
         const s = await window.api.ollama.status();
+        const healthy = s.running && s.modelPresent;
         set({
             running: s.running,
             modelPresent: s.modelPresent,
@@ -128,7 +149,11 @@ async function runOp(
             installed: s.installed,
             version: s.version,
             busy: false,
-            ready: s.running && s.modelPresent,
+            ready: healthy,
+            phase: "idle",
+            status: "idle",
+            message: "",
+            percent: null,
         });
     } catch (e) {
         set({

@@ -157,8 +157,11 @@ const ensureRuntime = async (): Promise<void> => {
         percent: 0,
         message: meta.version,
     });
+    // ponytail: serve may log after resolve; drop post-ready progress
+    let live = true;
     await c.serve(meta.version, {
         downloadLog: (percent, message) => {
+            if (!live) return;
             emit({
                 phase: "runtime",
                 status: percent >= 100 ? "starting" : "downloading",
@@ -167,9 +170,11 @@ const ensureRuntime = async (): Promise<void> => {
             });
         },
         serverLog: (message) => {
+            if (!live) return;
             emit({ phase: "runtime", status: "starting", message });
         },
     });
+    live = false;
     owned = true;
     emit({
         phase: "runtime",
