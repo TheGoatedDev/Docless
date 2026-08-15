@@ -1,8 +1,13 @@
-import electronLogo from "./assets/electron.svg";
-import Versions from "./components/Versions";
-import { useStore } from "./stores/store";
+import { createFileRoute } from "@tanstack/react-router";
+import electronLogo from "../assets/electron.svg";
+import Versions from "../components/Versions";
+import { useStore } from "../stores/store";
 
-function App(): React.JSX.Element {
+export const Route = createFileRoute("/")({
+    component: Index,
+});
+
+function Index(): React.JSX.Element {
     const ipcHandle = (): void => window.electron.ipcRenderer.send("ping");
     const count = useStore((s) => s.count);
     const inc = useStore((s) => s.inc);
@@ -43,5 +48,3 @@ function App(): React.JSX.Element {
         </>
     );
 }
-
-export default App;

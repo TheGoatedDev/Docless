@@ -1,8 +1,9 @@
 import "./assets/main.css";
 
+import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
+import { router } from "./router";
 import { useOllama } from "./stores/ollama";
 import { useSettings } from "./stores/settings";
 
@@ -14,6 +15,6 @@ void useOllama.getState().hydrate();
 
 createRoot(root).render(
     <StrictMode>
-        <App />
+        <RouterProvider router={router} />
     </StrictMode>,
 );
