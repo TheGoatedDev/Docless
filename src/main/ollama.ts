@@ -157,11 +157,9 @@ const ensureRuntime = async (): Promise<void> => {
         percent: 0,
         message: meta.version,
     });
-    // ponytail: serve may log after resolve; drop post-ready progress
-    let live = true;
+    // ponytail: serverLog is lifetime stdout (GIN access logs) — never map to progress
     await c.serve(meta.version, {
         downloadLog: (percent, message) => {
-            if (!live) return;
             emit({
                 phase: "runtime",
                 status: percent >= 100 ? "starting" : "downloading",
@@ -169,12 +167,7 @@ const ensureRuntime = async (): Promise<void> => {
                 message,
             });
         },
-        serverLog: (message) => {
-            if (!live) return;
-            emit({ phase: "runtime", status: "starting", message });
-        },
     });
-    live = false;
     owned = true;
     emit({
         phase: "runtime",

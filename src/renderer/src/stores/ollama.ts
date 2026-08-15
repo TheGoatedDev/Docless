@@ -59,15 +59,8 @@ export const useOllama = create<State>((set, get) => ({
             listening = true;
             window.api.ollama.onProgress((e) => {
                 const cur = get();
-                // ponytail: ignore late starting/downloading after ready
-                if (
-                    cur.status === "ready" &&
-                    e.phase === cur.phase &&
-                    e.status !== "ready" &&
-                    e.status !== "error"
-                ) {
-                    return;
-                }
+                // ignore chatter once healthy and not in an op
+                if (cur.ready && !cur.busy && e.status !== "error") return;
                 const done = e.status === "ready" || e.status === "error";
                 set({
                     phase: e.phase,
@@ -99,7 +92,6 @@ export const useOllama = create<State>((set, get) => ({
             installed: s.installed,
             version: s.version,
             ready: healthy,
-            // clear stale "starting" when already healthy
             ...(!get().busy && healthy
                 ? {
                       phase: "idle" as const,

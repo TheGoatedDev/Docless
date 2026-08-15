@@ -40,8 +40,10 @@ function Status(): React.JSX.Element {
         void hydrate();
     }, [hydrate]);
 
-    const detail = error ?? (message || status);
-    const pct = percent != null ? ` (${percent}%)` : "";
+    const detail =
+        error ??
+        (ready && !busy ? "ok" : message || (status !== "idle" ? status : ""));
+    const pct = !ready && percent != null ? ` (${percent}%)` : "";
 
     return (
         <div className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -85,7 +87,7 @@ function Status(): React.JSX.Element {
                     <Flag ok={modelPresent} label="Model" />
                     <Flag ok={owned} label="Owned" />
                     {busy ? <Badge variant="secondary">Busy</Badge> : null}
-                    {phase !== "idle" ? (
+                    {phase !== "idle" && !(ready && !busy) ? (
                         <Badge variant="outline">
                             {phase}: {status}
                         </Badge>
