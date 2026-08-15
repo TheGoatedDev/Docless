@@ -36,6 +36,8 @@
     },
     "devDependencies": {
         "@biomejs/biome": "2.2.4",
+        "@commitlint/cli": "21.2.2",
+        "@commitlint/config-conventional": "21.2.2",
         "@electron-toolkit/tsconfig": "2.0.0",
         "@tanstack/router-plugin": "1.168.31",
         "@types/node": "22.19.1",
@@ -53,5 +55,10 @@
     },
     "lint-staged": {
         "*": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
+    },
+    "commitlint": {
+        "extends": [
+            "@commitlint/config-conventional"
+        ]
     }
 }

@@ -20,4 +20,5 @@ pnpm dev
 | `pnpm deps:check` | syncpack pin check |
 | `pnpm deps:pin` | pin all deps exact |
 
-Pre-commit: lint-staged (biome) + deps:check.
+Pre-commit: lint-staged (biome) + deps:check.  
+Commit-msg: conventional commits (commitlint).
