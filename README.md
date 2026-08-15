@@ -1,4 +1,4 @@
-# LocalDocs
+# Docless
 
 Electron + React + TypeScript (electron-vite).
 

@@ -1,8 +1,8 @@
 {
-    "name": "localdocs",
+    "name": "docless",
     "version": "1.0.0",
     "private": true,
-    "description": "An Electron application with React and TypeScript",
+    "description": "Docless",
     "main": "./out/main/index.js",
     "author": "example.com",
     "homepage": "https://electron-vite.org",
