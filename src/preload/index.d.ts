@@ -1,8 +1,15 @@
-import { ElectronAPI } from "@electron-toolkit/preload";
+import type { ElectronAPI } from "@electron-toolkit/preload";
 
 declare global {
     interface Window {
         electron: ElectronAPI;
-        api: unknown;
+        api: {
+            settings: {
+                get: () => Promise<Record<string, unknown>>;
+                set: (
+                    data: Record<string, unknown>,
+                ) => Promise<Record<string, unknown>>;
+            };
+        };
     }
 }
