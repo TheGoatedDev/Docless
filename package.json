@@ -28,6 +28,7 @@
     "dependencies": {
         "@electron-toolkit/preload": "3.0.2",
         "@electron-toolkit/utils": "4.0.0",
+        "@tanstack/react-router": "1.170.28",
         "electron-ollama": "0.1.25",
         "react": "19.2.1",
         "react-dom": "19.2.1",
@@ -36,6 +37,7 @@
     "devDependencies": {
         "@biomejs/biome": "2.2.4",
         "@electron-toolkit/tsconfig": "2.0.0",
+        "@tanstack/router-plugin": "1.168.31",
         "@types/node": "22.19.1",
         "@types/react": "19.2.7",
         "@types/react-dom": "19.2.3",
