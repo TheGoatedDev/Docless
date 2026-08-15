@@ -36,6 +36,7 @@ declare global {
                     owned: boolean;
                     busy: boolean;
                     installed: boolean;
+                    version: string | null;
                 }>;
                 onProgress: (cb: (e: OllamaProgress) => void) => () => void;
             };

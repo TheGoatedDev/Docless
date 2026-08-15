@@ -23,6 +23,7 @@ function Status(): React.JSX.Element {
         running,
         modelPresent,
         owned,
+        version: ollamaVersion,
         busy,
         phase,
         status,
@@ -64,6 +65,8 @@ function Status(): React.JSX.Element {
                         <dd>{versions.chrome}</dd>
                         <dt className="text-muted-foreground">Node</dt>
                         <dd>{versions.node}</dd>
+                        <dt className="text-muted-foreground">Ollama</dt>
+                        <dd>{ollamaVersion ?? "—"}</dd>
                     </dl>
                 </CardContent>
             </Card>

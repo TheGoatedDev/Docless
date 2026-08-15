@@ -23,6 +23,7 @@ type State = {
     modelPresent: boolean;
     owned: boolean;
     installed: boolean;
+    version: string | null;
     phase: "idle" | "runtime" | "model";
     status: string;
     percent: number | null;
@@ -45,6 +46,7 @@ export const useOllama = create<State>((set, get) => ({
     modelPresent: false,
     owned: false,
     installed: false,
+    version: null,
     phase: "idle",
     status: "idle",
     percent: null,
@@ -80,6 +82,7 @@ export const useOllama = create<State>((set, get) => ({
             modelPresent: s.modelPresent,
             owned: s.owned,
             installed: s.installed,
+            version: s.version,
             ready: s.running && s.modelPresent,
         });
     },
@@ -119,6 +122,7 @@ async function runOp(
             modelPresent: s.modelPresent,
             owned: s.owned,
             installed: s.installed,
+            version: s.version,
             busy: false,
             ready: s.running && s.modelPresent,
         });

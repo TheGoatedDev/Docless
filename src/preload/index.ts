@@ -39,6 +39,7 @@ const api = {
             owned: boolean;
             busy: boolean;
             installed: boolean;
+            version: string | null;
         }> => ipcRenderer.invoke("ollama:status"),
         onProgress: (cb: (e: OllamaProgress) => void): (() => void) => {
             const handler = (_: Electron.IpcRendererEvent, e: OllamaProgress) =>

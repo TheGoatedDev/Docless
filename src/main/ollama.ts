@@ -30,6 +30,8 @@ export type OllamaStatus = {
     busy: boolean;
     /** electron-ollama binary already on disk (skip setup wizard if so) */
     installed: boolean;
+    /** installed electron-ollama tag, or running server version */
+    version: string | null;
 };
 
 let eo: ElectronOllama | null = null;
@@ -211,15 +213,30 @@ export async function getOllamaStatus(): Promise<OllamaStatus> {
     let running = false;
     let modelPresent = false;
     let installed = false;
+    let version: string | null = null;
     try {
         const c = client();
-        installed = (await c.downloadedVersions()).length > 0;
+        const downloaded = await c.downloadedVersions();
+        installed = downloaded.length > 0;
+        // ponytail: tags sort ok enough; no semver dep
+        version = downloaded.sort().at(-1) ?? null;
         running = await c.isRunning();
-        if (running) modelPresent = await hasModel();
+        if (running) {
+            modelPresent = await hasModel();
+            try {
+                const res = await fetch(`${HOST}/api/version`);
+                if (res.ok) {
+                    const data = (await res.json()) as { version?: string };
+                    if (data.version) version = data.version;
+                }
+            } catch {
+                /* keep disk version */
+            }
+        }
     } catch {
         /* offline */
     }
-    return { running, modelPresent, owned, busy, installed };
+    return { running, modelPresent, owned, busy, installed, version };
 }
 
 export async function stopOllamaIfOwned(): Promise<void> {
