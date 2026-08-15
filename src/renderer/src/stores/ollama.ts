@@ -51,25 +51,30 @@ export const useOllama = create<State>((set, get) => ({
         if (!listening) {
             listening = true;
             window.api.ollama.onProgress((e) => {
+                const done = e.status === "ready" || e.status === "error";
                 set({
                     phase: e.phase,
                     status: e.status,
                     percent: e.percent ?? get().percent,
                     message: e.message ?? "",
                     error: e.status === "error" ? (e.message ?? "error") : null,
-                    ready:
-                        e.phase === "model" && e.status === "ready"
-                            ? true
-                            : get().ready,
+                    // ponytail: terminal progress unblocks UI; runOp also clears busy
+                    ...(done ? { busy: false } : {}),
+                    ...(e.phase === "runtime" && e.status === "ready"
+                        ? { running: true }
+                        : {}),
+                    ...(e.phase === "model" && e.status === "ready"
+                        ? { modelPresent: true, ready: true }
+                        : {}),
                 });
             });
         }
         const s = await window.api.ollama.status();
+        // ponytail: never overwrite busy from status — stale hydrate races runOp
         set({
             running: s.running,
             modelPresent: s.modelPresent,
             owned: s.owned,
-            busy: s.busy,
             ready: s.running && s.modelPresent,
         });
     },
