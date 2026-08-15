@@ -1,0 +1,111 @@
+import { create } from "zustand";
+
+export type OllamaProgress =
+    | {
+          phase: "runtime";
+          status: "checking" | "downloading" | "starting" | "ready" | "error";
+          percent?: number;
+          message?: string;
+      }
+    | {
+          phase: "model";
+          status: "checking" | "pulling" | "ready" | "error";
+          percent?: number;
+          message?: string;
+          completed?: number;
+          total?: number;
+      };
+
+type State = {
+    ready: boolean;
+    busy: boolean;
+    running: boolean;
+    modelPresent: boolean;
+    owned: boolean;
+    phase: "idle" | "runtime" | "model";
+    status: string;
+    percent: number | null;
+    message: string;
+    error: string | null;
+    hydrate: () => Promise<void>;
+    ensure: () => Promise<void>;
+    reinstall: () => Promise<void>;
+};
+
+let listening = false;
+
+export const useOllama = create<State>((set, get) => ({
+    ready: false,
+    busy: false,
+    running: false,
+    modelPresent: false,
+    owned: false,
+    phase: "idle",
+    status: "idle",
+    percent: null,
+    message: "",
+    error: null,
+
+    hydrate: async () => {
+        if (!listening) {
+            listening = true;
+            window.api.ollama.onProgress((e) => {
+                set({
+                    phase: e.phase,
+                    status: e.status,
+                    percent: e.percent ?? get().percent,
+                    message: e.message ?? "",
+                    error: e.status === "error" ? (e.message ?? "error") : null,
+                    ready:
+                        e.phase === "model" && e.status === "ready"
+                            ? true
+                            : get().ready,
+                });
+            });
+        }
+        const s = await window.api.ollama.status();
+        set({
+            running: s.running,
+            modelPresent: s.modelPresent,
+            owned: s.owned,
+            busy: s.busy,
+            ready: s.running && s.modelPresent,
+        });
+    },
+
+    ensure: async () => {
+        await runOp(() => window.api.ollama.ensure(), set);
+    },
+
+    reinstall: async () => {
+        await runOp(() => window.api.ollama.reinstall(), set);
+    },
+}));
+
+async function runOp(
+    op: () => Promise<unknown>,
+    set: (partial: Partial<State>) => void,
+): Promise<void> {
+    set({ busy: true, error: null, ready: false });
+    try {
+        await op();
+        const s = await window.api.ollama.status();
+        set({
+            running: s.running,
+            modelPresent: s.modelPresent,
+            owned: s.owned,
+            busy: false,
+            ready: true,
+            phase: "model",
+            status: "ready",
+            percent: 100,
+        });
+    } catch (e) {
+        set({
+            busy: false,
+            ready: false,
+            error: e instanceof Error ? e.message : String(e),
+            status: "error",
+        });
+    }
+}

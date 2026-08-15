@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow, ipcMain, shell } from "electron";
 import icon from "../../resources/icon.png?asset";
+import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
 import { registerSettingsIpc } from "./settings";
 
 function createWindow(): void {
@@ -53,6 +54,7 @@ app.whenReady().then(() => {
     // IPC test
     ipcMain.on("ping", () => console.log("pong"));
     registerSettingsIpc();
+    registerOllamaIpc();
 
     createWindow();
 
@@ -70,6 +72,10 @@ app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
         app.quit();
     }
+});
+
+app.on("before-quit", () => {
+    void stopOllamaIfOwned();
 });
 
 // In this file you can include the rest of your app's specific main process
