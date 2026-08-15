@@ -1,0 +1,10 @@
+blockExoticSubdeps: false
+strictDepBuilds: false
+onlyBuiltDependencies:
+  - electron
+  - esbuild
+  - electron-winstaller
+allowBuilds:
+  electron: true
+  electron-winstaller: true
+  esbuild: true

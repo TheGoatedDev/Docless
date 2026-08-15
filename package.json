@@ -1,0 +1,54 @@
+{
+    "name": "localdocs",
+    "version": "1.0.0",
+    "private": true,
+    "description": "An Electron application with React and TypeScript",
+    "main": "./out/main/index.js",
+    "author": "example.com",
+    "homepage": "https://electron-vite.org",
+    "packageManager": "pnpm@11.22.0",
+    "scripts": {
+        "dev": "electron-vite dev",
+        "start": "electron-vite preview",
+        "build": "pnpm run typecheck && electron-vite build",
+        "typecheck": "pnpm run typecheck:node && pnpm run typecheck:web",
+        "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+        "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+        "lint": "biome check .",
+        "format": "biome check --write .",
+        "deps:check": "syncpack list-mismatches && syncpack lint-semver-ranges",
+        "deps:pin": "syncpack fix-mismatches && syncpack set-semver-ranges",
+        "prepare": "husky",
+        "postinstall": "electron-builder install-app-deps",
+        "build:unpack": "pnpm run build && electron-builder --dir",
+        "build:win": "pnpm run build && electron-builder --win",
+        "build:mac": "electron-vite build && electron-builder --mac",
+        "build:linux": "electron-vite build && electron-builder --linux"
+    },
+    "dependencies": {
+        "@electron-toolkit/preload": "3.0.2",
+        "@electron-toolkit/utils": "4.0.0",
+        "react": "19.2.1",
+        "react-dom": "19.2.1",
+        "zustand": "5.0.8"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "2.2.4",
+        "@electron-toolkit/tsconfig": "2.0.0",
+        "@types/node": "22.19.1",
+        "@types/react": "19.2.7",
+        "@types/react-dom": "19.2.3",
+        "@vitejs/plugin-react": "5.1.1",
+        "electron": "39.2.6",
+        "electron-builder": "26.0.12",
+        "electron-vite": "5.0.0",
+        "husky": "9.1.7",
+        "lint-staged": "16.1.6",
+        "syncpack": "13.0.4",
+        "typescript": "5.9.3",
+        "vite": "7.2.6"
+    },
+    "lint-staged": {
+        "*": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
+    }
+}

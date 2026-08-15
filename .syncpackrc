@@ -1,0 +1,18 @@
+{
+  "semverGroups": [
+    {
+      "label": "Pin all dependencies",
+      "dependencies": ["**"],
+      "packages": ["**"],
+      "range": ""
+    }
+  ],
+  "versionGroups": [
+    {
+      "label": "Pin all dependencies",
+      "dependencies": ["**"],
+      "packages": ["**"],
+      "pinVersion": ""
+    }
+  ]
+}
