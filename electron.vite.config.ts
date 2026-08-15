@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "electron-vite";
@@ -21,6 +22,8 @@ export default defineConfig({
                 autoCodeSplitting: true,
             }) as never,
             react(),
+            // ponytail: cast — dual vite copies from tailwind vs electron-vite
+            tailwindcss() as never,
         ],
     },
 });
