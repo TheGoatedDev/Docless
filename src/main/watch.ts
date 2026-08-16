@@ -3,14 +3,15 @@ import { join } from "node:path";
 import chokidar, { type FSWatcher } from "chokidar";
 import { log as rootLog } from "./logger";
 
-const log = rootLog.child({ mod: "watch" });
+// ponytail: child at call time — initLogger swaps the root after this module loads
+const log = () => rootLog.child({ mod: "watch" });
 const watchers = new Map<string, FSWatcher>();
 
 function ensureDocless(root: string): void {
     try {
         mkdirSync(join(root, ".docless"), { recursive: true });
     } catch (err) {
-        log.error({ root, err }, ".docless mkdir failed");
+        log().error({ root, err }, ".docless mkdir failed");
     }
 }
 
@@ -32,11 +33,11 @@ function start(root: string): void {
         "addDir",
         "unlinkDir",
     ] as const) {
-        w.on(ev, (path) => log.info({ ev, path }, "fs event"));
+        w.on(ev, (path) => log().info({ ev, path }, "fs event"));
     }
-    w.on("error", (err) => log.error({ root, err }, "watcher error"));
+    w.on("error", (err) => log().error({ root, err }, "watcher error"));
     watchers.set(root, w);
-    log.info({ root }, "watch path added");
+    log().info({ root }, "watch path added");
 }
 
 async function stop(root: string): Promise<void> {
@@ -44,7 +45,7 @@ async function stop(root: string): Promise<void> {
     if (!w) return;
     watchers.delete(root);
     await w.close();
-    log.info({ root }, "watch path removed");
+    log().info({ root }, "watch path removed");
 }
 
 export function syncWatchPaths(paths: string[]): void {
@@ -53,7 +54,7 @@ export function syncWatchPaths(paths: string[]): void {
         if (!want.has(root)) void stop(root);
     }
     for (const root of paths) start(root);
-    log.debug({ paths, active: [...watchers.keys()] }, "watch paths synced");
+    log().debug({ paths, active: [...watchers.keys()] }, "watch paths synced");
 }
 
 export async function stopAllWatchers(): Promise<void> {

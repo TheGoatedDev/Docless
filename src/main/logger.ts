@@ -7,6 +7,7 @@ import build from "pino-roll";
 const LEVELS = ["debug", "info", "warn", "error", "fatal"] as const;
 type Level = (typeof LEVELS)[number];
 
+// reassigned in initLogger — ESM live binding; don't cache .child() before init
 export let log: Logger = pino({ level: "silent" });
 
 function isLevel(v: unknown): v is Level {
@@ -40,7 +41,10 @@ export async function initLogger(): Promise<void> {
 
     if (is.dev) {
         const pretty = (await import("pino-pretty")).default;
-        streams.push({ level: "debug", stream: pretty({ colorize: true }) });
+        streams.push({
+            level: "debug",
+            stream: pretty({ colorize: true, destination: 1 }),
+        });
     }
 
     log = pino({ level: is.dev ? "debug" : "info" }, multistream(streams));
