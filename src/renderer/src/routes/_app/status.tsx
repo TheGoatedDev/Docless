@@ -46,7 +46,7 @@ function Status(): React.JSX.Element {
     const pct = !ready && percent != null ? ` (${percent}%)` : "";
 
     return (
-        <div className="mx-auto flex max-w-2xl flex-col gap-4">
+        <div className="flex flex-col gap-4">
             <div>
                 <h1 className="font-heading text-xl font-medium">Status</h1>
                 <p className="text-muted-foreground mt-1 text-sm">
