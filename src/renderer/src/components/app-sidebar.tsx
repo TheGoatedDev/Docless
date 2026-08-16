@@ -46,7 +46,7 @@ export function AppSidebar(
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-            <div className="absolute inset-y-0 right-0 z-20 flex translate-x-1/2 items-center">
+            <div className="absolute inset-y-0 right-0 z-20 hidden translate-x-1/2 items-center md:flex">
                 <Button
                     variant="ghost"
                     size="icon-sm"
