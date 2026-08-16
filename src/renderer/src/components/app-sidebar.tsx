@@ -26,7 +26,7 @@ export function AppSidebar(
 
     return (
         <Sidebar collapsible="icon" {...props}>
-            <SidebarContent className="pt-4">
+            <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu className="gap-1">

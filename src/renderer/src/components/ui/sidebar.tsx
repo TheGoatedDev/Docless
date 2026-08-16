@@ -203,7 +203,7 @@ function Sidebar({
                             Displays the mobile sidebar.
                         </SheetDescription>
                     </SheetHeader>
-                    <div className="flex h-full w-full flex-col">
+                    <div className="flex h-full w-full flex-col pt-4">
                         {children}
                     </div>
                 </SheetContent>
