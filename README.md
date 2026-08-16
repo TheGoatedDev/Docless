@@ -1,6 +1,22 @@
 # Docless
 
-Electron + React + TypeScript (electron-vite).
+Local-first document app: watch folders, keep metadata on disk, OCR on-device. Nothing leaves the machine.
+
+## Intent
+
+- You add watched paths.
+- Each watched root gets a `.docless` sidecar for Docless metadata.
+- OCR runs via local [Ollama](https://ollama.com) (`glm-ocr`).
+
+## Status
+
+**Works:** Electron shell, tray + compact window, setup wizard, Ollama install/start/pull, settings with `watchPaths`, chokidar watch + `.docless` mkdir per root.
+
+**Not yet:** `.docless` layout, OCR jobs, search/index, document UI.
+
+## Stack
+
+Electron + React + TypeScript ([electron-vite](https://electron-vite.org)), TanStack Router, Zustand, Tailwind/shadcn, Ollama.
 
 ## Setup
 
@@ -8,8 +24,6 @@ Electron + React + TypeScript (electron-vite).
 pnpm install
 pnpm dev
 ```
-
-## Scripts
 
 | script | what |
 |--------|------|
@@ -22,3 +36,8 @@ pnpm dev
 
 Pre-commit: lint-staged (biome) + deps:check.  
 Commit-msg: conventional commits (commitlint).
+
+## Docs
+
+- [Architecture](docs/architecture.md) — as-built process map
+- [ADRs](docs/adr/) — decisions worth remembering

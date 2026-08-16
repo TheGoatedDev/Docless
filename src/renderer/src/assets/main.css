@@ -130,3 +130,10 @@
         @apply font-sans;
     }
 }
+
+.app-drag {
+    -webkit-app-region: drag;
+}
+.app-no-drag {
+    -webkit-app-region: no-drag;
+}

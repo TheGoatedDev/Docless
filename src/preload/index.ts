@@ -1,30 +1,28 @@
 import { electronAPI } from "@electron-toolkit/preload";
 import { contextBridge, ipcRenderer } from "electron";
+import type { OllamaProgress } from "../shared/ollama";
 
-type OllamaProgress =
-    | {
-          phase: "runtime";
-          status: "checking" | "downloading" | "starting" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          version?: string;
-      }
-    | {
-          phase: "model";
-          status: "checking" | "pulling" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          completed?: number;
-          total?: number;
-      };
+const windowRole = process.argv.some((a) => a === "--docless-window=compact")
+    ? ("compact" as const)
+    : ("main" as const);
 
 const api = {
+    windowRole,
+    logger: {
+        write: (
+            level: "debug" | "info" | "warn" | "error" | "fatal",
+            msg: string,
+            data?: Record<string, unknown>,
+        ): void => {
+            ipcRenderer.send("log:write", { level, msg, data });
+        },
+    },
     settings: {
-        get: (): Promise<Record<string, unknown>> =>
+        get: (): Promise<{ watchPaths: string[] }> =>
             ipcRenderer.invoke("settings:get"),
-        set: (
-            data: Record<string, unknown>,
-        ): Promise<Record<string, unknown>> =>
+        set: (data: {
+            watchPaths: string[];
+        }): Promise<{ watchPaths: string[] }> =>
             ipcRenderer.invoke("settings:set", data),
     },
     ollama: {
@@ -55,6 +53,10 @@ const api = {
         show: (p: { title: string; body?: string }): Promise<boolean> =>
             ipcRenderer.invoke("notify:show", p),
     },
+    dialog: {
+        openDirectory: (): Promise<string | null> =>
+            ipcRenderer.invoke("dialog:openDirectory"),
+    },
 };
 
 if (process.contextIsolated) {
@@ -62,7 +64,14 @@ if (process.contextIsolated) {
         contextBridge.exposeInMainWorld("electron", electronAPI);
         contextBridge.exposeInMainWorld("api", api);
     } catch (error) {
-        console.error(error);
+        ipcRenderer.send("log:write", {
+            level: "error",
+            msg: error instanceof Error ? error.message : String(error),
+            data:
+                error instanceof Error
+                    ? { stack: error.stack, src: "preload" }
+                    : { src: "preload" },
+        });
     }
 } else {
     // @ts-expect-error contextIsolation false

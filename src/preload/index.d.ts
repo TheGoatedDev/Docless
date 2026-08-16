@@ -1,31 +1,23 @@
 import type { ElectronAPI } from "@electron-toolkit/preload";
-
-type OllamaProgress =
-    | {
-          phase: "runtime";
-          status: "checking" | "downloading" | "starting" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          version?: string;
-      }
-    | {
-          phase: "model";
-          status: "checking" | "pulling" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          completed?: number;
-          total?: number;
-      };
+import type { OllamaProgress } from "../shared/ollama";
 
 declare global {
     interface Window {
         electron: ElectronAPI;
         api: {
+            windowRole: "main" | "compact";
+            logger: {
+                write: (
+                    level: "debug" | "info" | "warn" | "error" | "fatal",
+                    msg: string,
+                    data?: Record<string, unknown>,
+                ) => void;
+            };
             settings: {
-                get: () => Promise<Record<string, unknown>>;
-                set: (
-                    data: Record<string, unknown>,
-                ) => Promise<Record<string, unknown>>;
+                get: () => Promise<{ watchPaths: string[] }>;
+                set: (data: {
+                    watchPaths: string[];
+                }) => Promise<{ watchPaths: string[] }>;
             };
             ollama: {
                 ensureRuntime: () => Promise<{ ok: true }>;
@@ -43,6 +35,9 @@ declare global {
             };
             notify: {
                 show: (p: { title: string; body?: string }) => Promise<boolean>;
+            };
+            dialog: {
+                openDirectory: () => Promise<string | null>;
             };
         };
     }
