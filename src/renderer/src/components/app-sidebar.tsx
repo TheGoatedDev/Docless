@@ -51,15 +51,17 @@ export function AppSidebar(
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-            <Button
-                variant="ghost"
-                size="icon-sm"
-                className="absolute top-1/2 right-0 z-20 size-6 -translate-y-1/2 translate-x-1/2 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-none transition-none hover:bg-sidebar"
-                onClick={toggleSidebar}
-            >
-                {open ? <IconChevronLeft /> : <IconChevronRight />}
-                <span className="sr-only">Toggle Sidebar</span>
-            </Button>
+            <div className="absolute inset-y-0 right-0 z-20 flex translate-x-1/2 items-center">
+                <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="size-6 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-none transition-none hover:bg-sidebar active:translate-y-0"
+                    onClick={toggleSidebar}
+                >
+                    {open ? <IconChevronLeft /> : <IconChevronRight />}
+                    <span className="sr-only">Toggle Sidebar</span>
+                </Button>
+            </div>
         </Sidebar>
     );
 }
