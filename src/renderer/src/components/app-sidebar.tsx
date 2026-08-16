@@ -8,8 +8,9 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarRail,
+    SidebarTrigger,
 } from "@renderer/components/ui/sidebar";
-import { IconActivity, IconFileText, IconHome } from "@tabler/icons-react";
+import { IconActivity, IconHome } from "@tabler/icons-react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 
 const items = [
@@ -27,17 +28,7 @@ export function AppSidebar(
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton
-                            size="lg"
-                            className="pointer-events-none"
-                        >
-                            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                                <IconFileText />
-                            </div>
-                            <span className="font-heading text-sm font-medium">
-                                Docless
-                            </span>
-                        </SidebarMenuButton>
+                        <SidebarTrigger className="size-8" />
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>

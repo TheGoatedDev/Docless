@@ -1,10 +1,6 @@
 import { AppSidebar } from "@renderer/components/app-sidebar";
 import { Badge } from "@renderer/components/ui/badge";
-import {
-    SidebarInset,
-    SidebarProvider,
-    SidebarTrigger,
-} from "@renderer/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@renderer/components/ui/sidebar";
 import {
     Tooltip,
     TooltipContent,
@@ -46,7 +42,6 @@ function AppLayout(): React.JSX.Element {
                     <header
                         className={`app-drag relative z-20 flex h-11 shrink-0 items-center gap-2 border-b px-4 ${mac ? "pl-20" : "pr-28"}`}
                     >
-                        <SidebarTrigger className="app-no-drag -ml-1" />
                         <span className="font-heading text-sm font-medium">
                             Docless
                         </span>
