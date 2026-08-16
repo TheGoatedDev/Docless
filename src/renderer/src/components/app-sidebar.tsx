@@ -9,12 +9,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@renderer/components/ui/sidebar";
-import {
-    IconActivity,
-    IconChevronLeft,
-    IconChevronRight,
-    IconHome,
-} from "@tabler/icons-react";
+import { IconActivity, IconChevronLeft, IconHome } from "@tabler/icons-react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 
 const items = [
@@ -58,7 +53,9 @@ export function AppSidebar(
                     className="size-6 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-none transition-none hover:bg-sidebar active:translate-y-0"
                     onClick={toggleSidebar}
                 >
-                    {open ? <IconChevronLeft /> : <IconChevronRight />}
+                    <IconChevronLeft
+                        className={`transition-transform duration-200 ${open ? "" : "rotate-180"}`}
+                    />
                     <span className="sr-only">Toggle Sidebar</span>
                 </Button>
             </div>
