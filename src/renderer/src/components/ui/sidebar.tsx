@@ -191,8 +191,10 @@ function Sidebar({
                     data-slot="sidebar"
                     data-mobile="true"
                     className={cn(
-                        "h-auto w-(--sidebar-width) rounded-lg bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden",
-                        main ? "top-11 bottom-4" : "inset-y-4",
+                        "w-(--sidebar-width) rounded-lg bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden data-[side=left]:h-auto data-[side=right]:h-auto",
+                        main
+                            ? "data-[side=left]:top-11 data-[side=left]:bottom-4 data-[side=right]:top-11 data-[side=right]:bottom-4"
+                            : "data-[side=left]:inset-y-4 data-[side=right]:inset-y-4",
                     )}
                     style={
                         {
