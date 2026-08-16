@@ -1,6 +1,14 @@
 import { join } from "node:path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
-import { app, BrowserWindow, ipcMain, Menu, shell, Tray } from "electron";
+import {
+    app,
+    BrowserWindow,
+    ipcMain,
+    Menu,
+    nativeImage,
+    shell,
+    Tray,
+} from "electron";
 import icon from "../../resources/icon.png?asset";
 import { registerNotifyIpc } from "./notify";
 import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
@@ -84,7 +92,11 @@ function createCompactWindow(): BrowserWindow {
 }
 
 function createTray(): void {
-    tray = new Tray(icon);
+    // 512px app icon blows up the menu bar; tray wants ~16–22px
+    const trayIcon = nativeImage
+        .createFromPath(icon)
+        .resize({ width: 16, height: 16 });
+    tray = new Tray(trayIcon);
     tray.setToolTip("Docless");
     tray.setContextMenu(
         Menu.buildFromTemplate([
