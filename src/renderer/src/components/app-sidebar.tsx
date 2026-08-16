@@ -5,6 +5,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarSeparator,
     useSidebar,
 } from "@renderer/components/ui/sidebar";
 import {
@@ -57,7 +58,10 @@ export function AppSidebar(): React.JSX.Element {
     return (
         <Sidebar collapsible="icon">
             <SidebarContent>{menu(top)}</SidebarContent>
-            <SidebarFooter className="p-0">{menu(bottom)}</SidebarFooter>
+            <SidebarFooter className="gap-0 p-0">
+                <SidebarSeparator className="mx-0" />
+                {menu(bottom)}
+            </SidebarFooter>
             <div className="absolute inset-y-0 right-0 z-20 hidden translate-x-1/2 items-center md:flex">
                 <button
                     type="button"
