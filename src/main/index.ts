@@ -1,14 +1,45 @@
 import { join } from "node:path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
-import { app, BrowserWindow, ipcMain, shell } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, shell, Tray } from "electron";
 import icon from "../../resources/icon.png?asset";
 import { registerNotifyIpc } from "./notify";
 import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
 import { registerSettingsIpc } from "./settings";
 
-function createWindow(): void {
-    // Create the browser window.
-    const mainWindow = new BrowserWindow({
+let mainWindow: BrowserWindow | null = null;
+let compactWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
+
+function loadRenderer(win: BrowserWindow): void {
+    if (is.dev && process.env.ELECTRON_RENDERER_URL) {
+        void win.loadURL(process.env.ELECTRON_RENDERER_URL);
+    } else {
+        void win.loadFile(join(__dirname, "../renderer/index.html"));
+    }
+}
+
+function wireWindow(win: BrowserWindow): void {
+    win.on("ready-to-show", () => win.show());
+    win.webContents.setWindowOpenHandler((details) => {
+        void shell.openExternal(details.url);
+        return { action: "deny" };
+    });
+    loadRenderer(win);
+}
+
+function focusWindow(win: BrowserWindow): void {
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
+}
+
+function createMainWindow(): BrowserWindow {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        focusWindow(mainWindow);
+        return mainWindow;
+    }
+
+    mainWindow = new BrowserWindow({
         width: 900,
         height: 670,
         show: false,
@@ -20,65 +51,77 @@ function createWindow(): void {
         },
     });
 
-    mainWindow.on("ready-to-show", () => {
-        mainWindow.show();
+    mainWindow.on("closed", () => {
+        mainWindow = null;
     });
-
-    mainWindow.webContents.setWindowOpenHandler((details) => {
-        shell.openExternal(details.url);
-        return { action: "deny" };
-    });
-
-    // HMR for renderer base on electron-vite cli.
-    // Load the remote URL for development or the local html file for production.
-    if (is.dev && process.env.ELECTRON_RENDERER_URL) {
-        mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
-    } else {
-        mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
-    }
+    wireWindow(mainWindow);
+    return mainWindow;
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+function createCompactWindow(): BrowserWindow {
+    if (compactWindow && !compactWindow.isDestroyed()) {
+        focusWindow(compactWindow);
+        return compactWindow;
+    }
+
+    compactWindow = new BrowserWindow({
+        width: 390,
+        height: 680,
+        show: false,
+        autoHideMenuBar: true,
+        ...(process.platform === "linux" ? { icon } : {}),
+        webPreferences: {
+            preload: join(__dirname, "../preload/index.js"),
+            sandbox: false,
+        },
+    });
+
+    compactWindow.on("closed", () => {
+        compactWindow = null;
+    });
+    wireWindow(compactWindow);
+    return compactWindow;
+}
+
+function createTray(): void {
+    tray = new Tray(icon);
+    tray.setToolTip("Docless");
+    tray.setContextMenu(
+        Menu.buildFromTemplate([
+            { label: "Open App", click: () => createMainWindow() },
+            { label: "Quick view", click: () => createCompactWindow() },
+            { type: "separator" },
+            { label: "Quit", click: () => app.quit() },
+        ]),
+    );
+    tray.on("click", () => createCompactWindow());
+}
+
 app.whenReady().then(() => {
-    // Set app user model id for windows
     electronApp.setAppUserModelId("com.docless.app");
 
-    // Default open or close DevTools by F12 in development
-    // and ignore CommandOrControl + R in production.
-    // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
     app.on("browser-window-created", (_, window) => {
         optimizer.watchWindowShortcuts(window);
     });
 
-    // IPC test
     ipcMain.on("ping", () => console.log("pong"));
     registerSettingsIpc();
     registerOllamaIpc();
     registerNotifyIpc();
 
-    createWindow();
+    createTray();
+    createMainWindow();
 
     app.on("activate", () => {
-        // On macOS it's common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
     });
 });
 
-// Quit when all windows are closed, except on macOS. It's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") {
-        app.quit();
-    }
-});
+// ponytail: tray keeps process alive; quit only via tray/Cmd+Q
+app.on("window-all-closed", () => {});
 
 app.on("before-quit", () => {
+    tray?.destroy();
+    tray = null;
     void stopOllamaIfOwned();
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
