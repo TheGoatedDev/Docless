@@ -44,7 +44,7 @@ function AppLayout(): React.JSX.Element {
             <SidebarProvider>
                 <div className="flex h-svh w-full flex-col">
                     <header
-                        className={`app-drag flex h-12 shrink-0 items-center gap-2 border-b px-4 ${mac ? "pl-20" : "pr-28"}`}
+                        className={`app-drag relative z-20 flex h-12 shrink-0 items-center gap-2 border-b px-4 ${mac ? "pl-20" : "pr-28"}`}
                     >
                         <SidebarTrigger className="app-no-drag -ml-1" />
                         <span className="font-heading text-sm font-medium">
