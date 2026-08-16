@@ -6,14 +6,22 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@renderer/components/ui/sidebar";
-import { IconActivity, IconChevronLeft, IconHome } from "@tabler/icons-react";
+import {
+    IconActivity,
+    IconChevronLeft,
+    IconCode,
+    IconHome,
+} from "@tabler/icons-react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 const items = [
     { title: "Home", to: "/", icon: IconHome },
     { title: "Status", to: "/status", icon: IconActivity },
-] as const;
+    ...(import.meta.env.DEV
+        ? ([{ title: "Dev", to: "/dev", icon: IconCode }] as const)
+        : []),
+];
 
 export function AppSidebar(): React.JSX.Element {
     const matchRoute = useMatchRoute();
