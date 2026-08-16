@@ -10,13 +10,13 @@ Local-first document app: watch folders, keep metadata on disk, OCR on-device. N
 
 ## Status
 
-**Works:** Electron shell, tray + compact window, setup wizard, Ollama install/start/pull, settings with `watchPaths`, chokidar watch + `.docless` mkdir per root.
+**Works:** Electron shell, tray + compact window, setup wizard, Ollama install/start/pull, settings with `watchPaths`, chokidar watch, per-root `.docless/docless.sqlite` (migrate + WAL).
 
-**Not yet:** `.docless` layout, OCR jobs, search/index, document UI.
+**Not yet:** file track/upserts, OCR jobs, search/index, document UI.
 
 ## Stack
 
-Electron + React + TypeScript ([electron-vite](https://electron-vite.org)), TanStack Router, Zustand, Tailwind/shadcn, Ollama.
+Electron + React + TypeScript ([electron-vite](https://electron-vite.org)), TanStack Router, Zustand, Tailwind/shadcn, Ollama, better-sqlite3 + Drizzle (main).
 
 ## Setup
 

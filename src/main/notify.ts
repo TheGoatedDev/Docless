@@ -5,6 +5,18 @@ export type NotifyPayload = {
     body?: string;
 };
 
+/** Main-originated OS notification (no click-to-focus window). */
+export function notifyMain(payload: NotifyPayload): boolean {
+    if (!Notification.isSupported()) return false;
+    const title = payload.title?.trim();
+    if (!title) return false;
+    new Notification({
+        title,
+        body: payload.body?.trim() || undefined,
+    }).show();
+    return true;
+}
+
 export function registerNotifyIpc(): void {
     ipcMain.handle("notify:show", (e, payload: NotifyPayload): boolean => {
         if (!Notification.isSupported()) return false;
