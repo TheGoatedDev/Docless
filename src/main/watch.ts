@@ -36,6 +36,7 @@ function start(root: string): void {
     }
     w.on("error", (err) => log.error({ root, err }, "watcher error"));
     watchers.set(root, w);
+    log.info({ root }, "watch path added");
 }
 
 async function stop(root: string): Promise<void> {
@@ -43,6 +44,7 @@ async function stop(root: string): Promise<void> {
     if (!w) return;
     watchers.delete(root);
     await w.close();
+    log.info({ root }, "watch path removed");
 }
 
 export function syncWatchPaths(paths: string[]): void {
@@ -51,6 +53,7 @@ export function syncWatchPaths(paths: string[]): void {
         if (!want.has(root)) void stop(root);
     }
     for (const root of paths) start(root);
+    log.debug({ paths, active: [...watchers.keys()] }, "watch paths synced");
 }
 
 export async function stopAllWatchers(): Promise<void> {
