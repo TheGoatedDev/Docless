@@ -1,22 +1,6 @@
 import { electronAPI } from "@electron-toolkit/preload";
 import { contextBridge, ipcRenderer } from "electron";
-
-type OllamaProgress =
-    | {
-          phase: "runtime";
-          status: "checking" | "downloading" | "starting" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          version?: string;
-      }
-    | {
-          phase: "model";
-          status: "checking" | "pulling" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          completed?: number;
-          total?: number;
-      };
+import type { OllamaProgress } from "./ollama-progress";
 
 const windowRole = process.argv.some((a) => a === "--docless-window=compact")
     ? ("compact" as const)
