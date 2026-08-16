@@ -3,11 +3,9 @@ import {
     SidebarContent,
     SidebarGroup,
     SidebarGroupContent,
-    SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarRail,
     SidebarTrigger,
 } from "@renderer/components/ui/sidebar";
 import { IconActivity, IconHome } from "@tabler/icons-react";
@@ -25,13 +23,6 @@ export function AppSidebar(
 
     return (
         <Sidebar collapsible="icon" {...props}>
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarTrigger className="size-8" />
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupContent>
@@ -52,7 +43,7 @@ export function AppSidebar(
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarRail />
+            <SidebarTrigger className="absolute top-1/2 right-0 z-20 size-6 -translate-y-1/2 translate-x-1/2 rounded-full border bg-background shadow-sm" />
         </Sidebar>
     );
 }
