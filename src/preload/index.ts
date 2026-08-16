@@ -18,7 +18,12 @@ type OllamaProgress =
           total?: number;
       };
 
+const windowRole = process.argv.some((a) => a === "--docless-window=compact")
+    ? ("compact" as const)
+    : ("main" as const);
+
 const api = {
+    windowRole,
     settings: {
         get: (): Promise<Record<string, unknown>> =>
             ipcRenderer.invoke("settings:get"),

@@ -110,6 +110,7 @@ function ensureCompactWindow(): BrowserWindow {
         webPreferences: {
             preload: join(__dirname, "../preload/index.js"),
             sandbox: false,
+            additionalArguments: ["--docless-window=compact"],
         },
     });
 
