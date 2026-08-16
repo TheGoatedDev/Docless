@@ -66,17 +66,35 @@ function createMainWindow(): BrowserWindow {
     return mainWindow;
 }
 
-function createCompactWindow(): BrowserWindow {
-    if (compactWindow && !compactWindow.isDestroyed()) {
-        focusWindow(compactWindow);
-        return compactWindow;
-    }
+const COMPACT_W = 390;
+const COMPACT_H = 680;
+
+function positionBelowTray(win: BrowserWindow): void {
+    if (!tray) return;
+    const tb = tray.getBounds();
+    const x = Math.round(tb.x + tb.width / 2 - COMPACT_W / 2);
+    // macOS menu bar is top; Windows/Linux tray is usually bottom
+    const y =
+        process.platform === "darwin"
+            ? Math.round(tb.y + tb.height + 4)
+            : Math.round(tb.y - COMPACT_H - 4);
+    win.setPosition(x, y);
+}
+
+function ensureCompactWindow(): BrowserWindow {
+    if (compactWindow && !compactWindow.isDestroyed()) return compactWindow;
 
     compactWindow = new BrowserWindow({
-        width: 390,
-        height: 680,
+        width: COMPACT_W,
+        height: COMPACT_H,
         show: false,
-        autoHideMenuBar: true,
+        frame: false,
+        resizable: false,
+        maximizable: false,
+        minimizable: false,
+        fullscreenable: false,
+        skipTaskbar: true,
+        alwaysOnTop: true,
         ...(process.platform === "linux" ? { icon } : {}),
         webPreferences: {
             preload: join(__dirname, "../preload/index.js"),
@@ -87,8 +105,41 @@ function createCompactWindow(): BrowserWindow {
     compactWindow.on("closed", () => {
         compactWindow = null;
     });
-    wireWindow(compactWindow);
+    compactWindow.on("blur", () => {
+        if (compactWindow && !compactWindow.isDestroyed()) compactWindow.hide();
+    });
+    compactWindow.webContents.setWindowOpenHandler((details) => {
+        void shell.openExternal(details.url);
+        return { action: "deny" };
+    });
+    loadRenderer(compactWindow);
     return compactWindow;
+}
+
+function showCompactWindow(): void {
+    const win = ensureCompactWindow();
+    const reveal = (): void => {
+        positionBelowTray(win);
+        win.show();
+        win.focus();
+    };
+    if (win.webContents.isLoading()) {
+        win.webContents.once("did-finish-load", reveal);
+    } else {
+        reveal();
+    }
+}
+
+function toggleCompactWindow(): void {
+    if (
+        compactWindow &&
+        !compactWindow.isDestroyed() &&
+        compactWindow.isVisible()
+    ) {
+        compactWindow.hide();
+        return;
+    }
+    showCompactWindow();
 }
 
 function createTray(): void {
@@ -101,12 +152,12 @@ function createTray(): void {
     tray.setContextMenu(
         Menu.buildFromTemplate([
             { label: "Open App", click: () => createMainWindow() },
-            { label: "Quick view", click: () => createCompactWindow() },
+            { label: "Quick view", click: () => showCompactWindow() },
             { type: "separator" },
             { label: "Quit", click: () => app.quit() },
         ]),
     );
-    tray.on("click", () => createCompactWindow());
+    tray.on("click", () => toggleCompactWindow());
 }
 
 app.whenReady().then(() => {
