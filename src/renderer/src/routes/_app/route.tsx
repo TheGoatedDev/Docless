@@ -55,7 +55,7 @@ function AppLayout(): React.JSX.Element {
                         <span className="font-heading text-sm font-medium leading-none">
                             Docless
                         </span>
-                        <div className="app-no-drag relative ml-2 w-56 max-w-xs flex-1">
+                        <div className="app-no-drag absolute top-1/2 left-1/2 w-56 -translate-x-1/2 -translate-y-1/2">
                             <IconSearch className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 type="search"
