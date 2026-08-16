@@ -22,7 +22,13 @@ function AppLayout(): React.JSX.Element {
           : ready
             ? "Ollama"
             : "Ollama off";
-    const variant = error ? "destructive" : ready ? "default" : "secondary";
+    const dot = error
+        ? "bg-destructive"
+        : busy
+          ? "bg-amber-500"
+          : ready
+            ? "bg-emerald-500"
+            : "bg-muted-foreground/40";
 
     return (
         <TooltipProvider>
@@ -36,9 +42,10 @@ function AppLayout(): React.JSX.Element {
                         </span>
                         <Badge
                             className="ml-auto"
-                            variant={variant}
+                            variant="outline"
                             render={<Link to="/status" />}
                         >
+                            <span className={`size-1.5 rounded-full ${dot}`} />
                             {label}
                         </Badge>
                     </header>
