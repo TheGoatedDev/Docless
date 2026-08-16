@@ -36,23 +36,25 @@ function Dev(): React.JSX.Element {
                 </p>
             </div>
 
-            {(
-                [
-                    ["ollama", ollama],
-                    ["settings", settings],
-                ] as const
-            ).map(([name, state]) => (
-                <Card key={name} size="sm">
-                    <CardHeader>
-                        <CardTitle>{name}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <pre className="overflow-auto text-xs">
-                            {dump(state)}
-                        </pre>
-                    </CardContent>
-                </Card>
-            ))}
+            <div className="grid grid-cols-2 gap-4">
+                {(
+                    [
+                        ["ollama", ollama],
+                        ["settings", settings],
+                    ] as const
+                ).map(([name, state]) => (
+                    <Card key={name} size="sm">
+                        <CardHeader>
+                            <CardTitle>{name}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <pre className="overflow-auto text-xs">
+                                {dump(state)}
+                            </pre>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </div>
     );
 }
