@@ -1,38 +1,35 @@
+import { mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 import { is } from "@electron-toolkit/utils";
 import { app, ipcMain } from "electron";
 import pino, { type Logger, multistream } from "pino";
-import build from "pino-roll";
+import { createStream } from "rotating-file-stream";
+
+const require = createRequire(import.meta.url);
 
 const LEVELS = ["debug", "info", "warn", "error", "fatal"] as const;
 type Level = (typeof LEVELS)[number];
 
 const dir = join(app.getPath("userData"), "logs");
-const roll = {
-    frequency: "daily" as const,
-    size: "10m",
-    mkdir: true,
-    dateFormat: "yyyy-MM-dd",
-};
+mkdirSync(dir, { recursive: true });
 
-const appFile = await build({
-    ...roll,
-    file: join(dir, "app"),
-    limit: { count: 7 },
-});
-const errFile = await build({
-    ...roll,
-    file: join(dir, "error"),
-    limit: { count: 14 },
-});
+const roll = { size: "10M", interval: "1d" as const, path: dir };
 
 const streams: pino.StreamEntry[] = [
-    { level: "info", stream: appFile },
-    { level: "error", stream: errFile },
+    {
+        level: "info",
+        stream: createStream("app.log", { ...roll, maxFiles: 7 }),
+    },
+    {
+        level: "error",
+        stream: createStream("error.log", { ...roll, maxFiles: 14 }),
+    },
 ];
 
 if (is.dev) {
-    const pretty = (await import("pino-pretty")).default;
+    // ponytail: sync require — CJS main can't top-level-await pino-pretty
+    const pretty = require("pino-pretty") as typeof import("pino-pretty");
     streams.push({
         level: "debug",
         stream: pretty({ colorize: true, destination: 1 }),
