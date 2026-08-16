@@ -44,7 +44,8 @@ function Settings(): React.JSX.Element {
                 <CardHeader>
                     <CardTitle>Watched folders</CardTitle>
                     <CardDescription>
-                        Paths stored in settings. Watching not built yet.
+                        Each folder gets a .docless sidecar; changes are watched
+                        in the background.
                     </CardDescription>
                     <CardAction>
                         <Button

@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { app, dialog, ipcMain } from "electron";
+import { syncWatchPaths } from "./watch";
 
 export type Settings = {
     watchPaths: string[];
@@ -41,6 +42,7 @@ export function loadSettings(): Settings {
 export function saveSettings(data: Settings): Settings {
     const next = withDefaults(defaults, data) as Settings;
     writeFileSync(file(), JSON.stringify(next, null, 2));
+    syncWatchPaths(next.watchPaths);
     return next;
 }
 

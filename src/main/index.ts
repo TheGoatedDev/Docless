@@ -12,7 +12,8 @@ import {
 import icon from "../../resources/icon.png?asset";
 import { registerNotifyIpc } from "./notify";
 import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
-import { registerSettingsIpc } from "./settings";
+import { loadSettings, registerSettingsIpc } from "./settings";
+import { stopAllWatchers, syncWatchPaths } from "./watch";
 
 let mainWindow: BrowserWindow | null = null;
 let compactWindow: BrowserWindow | null = null;
@@ -179,6 +180,7 @@ app.whenReady().then(() => {
     registerSettingsIpc();
     registerOllamaIpc();
     registerNotifyIpc();
+    syncWatchPaths(loadSettings().watchPaths);
 
     createTray();
     createMainWindow();
@@ -194,5 +196,6 @@ app.on("window-all-closed", () => {});
 app.on("before-quit", () => {
     tray?.destroy();
     tray = null;
+    void stopAllWatchers();
     void stopOllamaIfOwned();
 });

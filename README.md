@@ -10,9 +10,9 @@ Local-first document app: watch folders, keep metadata on disk, OCR on-device. N
 
 ## Status
 
-**Works:** Electron shell, tray + compact window, setup wizard, Ollama install/start/pull, settings with `watchPaths`.
+**Works:** Electron shell, tray + compact window, setup wizard, Ollama install/start/pull, settings with `watchPaths`, chokidar watch + `.docless` mkdir per root.
 
-**Not yet:** folder watching, `.docless` layout, OCR jobs, search/index, document UI.
+**Not yet:** `.docless` layout, OCR jobs, search/index, document UI.
 
 ## Stack
 
