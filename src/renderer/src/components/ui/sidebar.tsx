@@ -193,7 +193,7 @@ function Sidebar({
                     className={cn(
                         "w-(--sidebar-width) rounded-lg bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden data-[side=left]:h-auto data-[side=right]:h-auto",
                         main
-                            ? "data-[side=left]:top-11 data-[side=left]:bottom-4 data-[side=right]:top-11 data-[side=right]:bottom-4"
+                            ? "data-[side=left]:top-11 data-[side=left]:bottom-0 data-[side=right]:top-11 data-[side=right]:bottom-0"
                             : "data-[side=left]:inset-y-4 data-[side=right]:inset-y-4",
                     )}
                     style={
