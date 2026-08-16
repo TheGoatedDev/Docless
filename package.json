@@ -19,7 +19,7 @@
         "deps:check": "syncpack lint",
         "deps:pin": "syncpack fix",
         "prepare": "husky",
-        "postinstall": "electron-builder install-app-deps",
+        "postinstall": "node node_modules/electron/install.js && electron-builder install-app-deps",
         "build:unpack": "pnpm run build && electron-builder --dir",
         "build:win": "pnpm run build && electron-builder --win",
         "build:mac": "electron-vite build && electron-builder --mac",
