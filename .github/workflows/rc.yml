@@ -41,7 +41,7 @@ jobs:
           {
             echo "should_build=${should_build}"
             echo "version=${version}"
-            echo "tag=v${version}"
+            echo "tag=rc-${RUN_NUMBER}.${SHA7}"
           } >> "$GITHUB_OUTPUT"
 
   build:

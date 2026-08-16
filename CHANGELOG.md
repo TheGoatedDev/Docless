@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0-rc.1.dfcbdeb](https://github.com/TheGoatedDev/Docless/compare/v1.0.0-rc.1.dfcbdeb...v1.1.0-rc.1.dfcbdeb) (2026-08-16)
+## [1.1.0](https://github.com/TheGoatedDev/Docless/releases/tag/v1.1.0) (2026-08-16)
 
 
 ### Features
