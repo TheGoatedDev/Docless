@@ -52,10 +52,12 @@ function AppLayout(): React.JSX.Element {
                         className={`app-drag relative z-20 flex h-11 shrink-0 items-center gap-2 border-b px-4 ${chrome ? (mac ? "pl-24" : "pr-28") : ""}`}
                     >
                         <SidebarTrigger className="app-no-drag md:hidden" />
-                        <span className="font-heading text-sm font-medium leading-none">
-                            Docless
-                        </span>
-                        <div className="app-no-drag absolute top-1/2 left-1/2 w-56 -translate-x-1/2 -translate-y-1/2">
+                        {chrome ? (
+                            <span className="font-heading text-sm font-medium leading-none">
+                                Docless
+                            </span>
+                        ) : null}
+                        <div className="app-no-drag relative ml-2 w-56 max-w-xs flex-1">
                             <IconSearch className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 type="search"
