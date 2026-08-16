@@ -10,7 +10,7 @@ import {
     Tray,
 } from "electron";
 import icon from "../../resources/icon.png?asset";
-import { initLogger, log, registerLogIpc } from "./logger";
+import { initLogger, logger, registerLogIpc } from "./logger";
 import { registerNotifyIpc } from "./notify";
 import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
 import { loadSettings, registerSettingsIpc } from "./settings";
@@ -178,7 +178,7 @@ app.whenReady().then(async () => {
         optimizer.watchWindowShortcuts(window);
     });
 
-    ipcMain.on("ping", () => log.info("pong"));
+    ipcMain.on("ping", () => logger.info("pong"));
     registerLogIpc();
     registerSettingsIpc();
     registerOllamaIpc();

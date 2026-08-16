@@ -1,6 +1,6 @@
 import pino from "pino";
 
-export const log = pino({
+export const logger = pino({
     level: import.meta.env.DEV ? "debug" : "info",
     browser: {
         asObject: true,
@@ -29,7 +29,7 @@ export const log = pino({
                     level === "fatal"
                         ? level
                         : "info";
-                window.api.log.write(
+                window.api.logger.write(
                     lv,
                     msg || lv,
                     Object.keys(data).length > 0 ? data : undefined,

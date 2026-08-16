@@ -24,7 +24,7 @@ const windowRole = process.argv.some((a) => a === "--docless-window=compact")
 
 const api = {
     windowRole,
-    log: {
+    logger: {
         write: (
             level: "debug" | "info" | "warn" | "error" | "fatal",
             msg: string,

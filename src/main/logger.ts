@@ -7,8 +7,25 @@ import build from "pino-roll";
 const LEVELS = ["debug", "info", "warn", "error", "fatal"] as const;
 type Level = (typeof LEVELS)[number];
 
-// reassigned in initLogger — ESM live binding; don't cache .child() before init
-export let log: Logger = pino({ level: "silent" });
+let root: Logger = pino({ level: "silent" });
+
+function wrap(bindings?: pino.Bindings): Logger {
+    return new Proxy({} as Logger, {
+        get(_t, prop) {
+            if (prop === "child") {
+                return (more: pino.Bindings) => wrap({ ...bindings, ...more });
+            }
+            const target = bindings ? root.child(bindings) : root;
+            const v = Reflect.get(target, prop, target);
+            return typeof v === "function"
+                ? (v as (...a: unknown[]) => unknown).bind(target)
+                : v;
+        },
+    });
+}
+
+// stable export — .child() at module load stays live after initLogger
+export const logger: Logger = wrap();
 
 function isLevel(v: unknown): v is Level {
     return typeof v === "string" && (LEVELS as readonly string[]).includes(v);
@@ -47,7 +64,7 @@ export async function initLogger(): Promise<void> {
         });
     }
 
-    log = pino({ level: is.dev ? "debug" : "info" }, multistream(streams));
+    root = pino({ level: is.dev ? "debug" : "info" }, multistream(streams));
 }
 
 export function registerLogIpc(): void {
@@ -62,7 +79,7 @@ export function registerLogIpc(): void {
             !Array.isArray(p.data)
                 ? (p.data as Record<string, unknown>)
                 : undefined;
-        if (data) log[level]({ src: "renderer", ...data }, msg);
-        else log[level]({ src: "renderer" }, msg);
+        if (data) logger[level]({ src: "renderer", ...data }, msg);
+        else logger[level]({ src: "renderer" }, msg);
     });
 }

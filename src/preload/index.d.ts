@@ -22,7 +22,7 @@ declare global {
         electron: ElectronAPI;
         api: {
             windowRole: "main" | "compact";
-            log: {
+            logger: {
                 write: (
                     level: "debug" | "info" | "warn" | "error" | "fatal",
                     msg: string,
