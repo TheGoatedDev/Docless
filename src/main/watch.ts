@@ -1,6 +1,7 @@
 import chokidar, { type FSWatcher } from "chokidar";
 import { closeLibrary, openLibrary } from "./db";
 import { logger as rootLogger } from "./logger";
+import { clearSchedules, prune, remove, schedule } from "./track";
 
 const logger = rootLogger.child({ mod: "watch" });
 const watchers = new Map<string, FSWatcher>();
@@ -17,22 +18,17 @@ function start(root: string): void {
     if (watchers.has(root)) return;
     ensureDocless(root);
     const w = chokidar.watch(root, {
-        ignoreInitial: true,
+        ignoreInitial: false,
         ignored: [
             /(^|[/\\])\.docless([/\\]|$)/,
             /(^|[/\\])\.git([/\\]|$)/,
             /(^|[/\\])node_modules([/\\]|$)/,
         ],
     });
-    for (const ev of [
-        "add",
-        "change",
-        "unlink",
-        "addDir",
-        "unlinkDir",
-    ] as const) {
-        w.on(ev, (path) => logger.info({ ev, path }, "fs event"));
-    }
+    w.on("add", (path) => schedule(root, path));
+    w.on("change", (path) => schedule(root, path));
+    w.on("unlink", (path) => remove(root, path));
+    w.on("ready", () => prune(root));
     w.on("error", (err) => logger.error({ root, err }, "watcher error"));
     watchers.set(root, w);
     logger.info({ root }, "watch path added");
@@ -42,6 +38,7 @@ async function stop(root: string): Promise<void> {
     const w = watchers.get(root);
     if (!w) return;
     watchers.delete(root);
+    clearSchedules(root);
     closeLibrary(root);
     await w.close();
     logger.info({ root }, "watch path removed");
