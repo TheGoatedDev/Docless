@@ -7,6 +7,7 @@ type OllamaProgress =
           status: "checking" | "downloading" | "starting" | "ready" | "error";
           percent?: number;
           message?: string;
+          version?: string;
       }
     | {
           phase: "model";
@@ -27,15 +28,19 @@ const api = {
             ipcRenderer.invoke("settings:set", data),
     },
     ollama: {
-        ensure: (): Promise<{ ready: true }> =>
-            ipcRenderer.invoke("ollama:ensure"),
-        reinstall: (): Promise<{ ready: true }> =>
+        ensureRuntime: (): Promise<{ ok: true }> =>
+            ipcRenderer.invoke("ollama:ensure-runtime"),
+        ensureModel: (): Promise<{ ok: true }> =>
+            ipcRenderer.invoke("ollama:ensure-model"),
+        reinstall: (): Promise<{ ok: true }> =>
             ipcRenderer.invoke("ollama:reinstall"),
         status: (): Promise<{
             running: boolean;
             modelPresent: boolean;
             owned: boolean;
             busy: boolean;
+            installed: boolean;
+            version: string | null;
         }> => ipcRenderer.invoke("ollama:status"),
         onProgress: (cb: (e: OllamaProgress) => void): (() => void) => {
             const handler = (_: Electron.IpcRendererEvent, e: OllamaProgress) =>
@@ -45,6 +50,10 @@ const api = {
                 ipcRenderer.removeListener("ollama:progress", handler);
             };
         },
+    },
+    notify: {
+        show: (p: { title: string; body?: string }): Promise<boolean> =>
+            ipcRenderer.invoke("notify:show", p),
     },
 };
 

@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow, ipcMain, shell } from "electron";
 import icon from "../../resources/icon.png?asset";
+import { registerNotifyIpc } from "./notify";
 import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
 import { registerSettingsIpc } from "./settings";
 
@@ -55,6 +56,7 @@ app.whenReady().then(() => {
     ipcMain.on("ping", () => console.log("pong"));
     registerSettingsIpc();
     registerOllamaIpc();
+    registerNotifyIpc();
 
     createWindow();
 

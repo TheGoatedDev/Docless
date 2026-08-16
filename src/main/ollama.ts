@@ -13,6 +13,7 @@ export type OllamaProgress =
           status: "checking" | "downloading" | "starting" | "ready" | "error";
           percent?: number;
           message?: string;
+          version?: string;
       }
     | {
           phase: "model";
@@ -28,6 +29,10 @@ export type OllamaStatus = {
     modelPresent: boolean;
     owned: boolean;
     busy: boolean;
+    /** electron-ollama binary already on disk (skip setup wizard if so) */
+    installed: boolean;
+    /** installed electron-ollama tag, or running server version */
+    version: string | null;
 };
 
 let eo: ElectronOllama | null = null;
@@ -113,11 +118,35 @@ const pullModel = async (): Promise<void> => {
     emit({ phase: "model", status: "ready", percent: 100 });
 };
 
+const diskVersion = async (): Promise<string | null> => {
+    const downloaded = await client().downloadedVersions();
+    // ponytail: tags sort ok enough; no semver dep
+    return downloaded.sort().at(-1) ?? null;
+};
+
+const apiVersion = async (): Promise<string | null> => {
+    try {
+        const res = await fetch(`${HOST}/api/version`);
+        if (!res.ok) return null;
+        const data = (await res.json()) as { version?: string };
+        return data.version ?? null;
+    } catch {
+        return null;
+    }
+};
+
+const resolveVersion = async (): Promise<string | null> =>
+    (await apiVersion()) ?? (await diskVersion());
+
 const ensureRuntime = async (): Promise<void> => {
     emit({ phase: "runtime", status: "checking" });
     const c = client();
     if (await c.isRunning()) {
-        emit({ phase: "runtime", status: "ready" });
+        emit({
+            phase: "runtime",
+            status: "ready",
+            version: (await resolveVersion()) ?? undefined,
+        });
         return;
     }
 
@@ -128,6 +157,7 @@ const ensureRuntime = async (): Promise<void> => {
         percent: 0,
         message: meta.version,
     });
+    // ponytail: serverLog is lifetime stdout (GIN access logs) — never map to progress
     await c.serve(meta.version, {
         downloadLog: (percent, message) => {
             emit({
@@ -137,12 +167,14 @@ const ensureRuntime = async (): Promise<void> => {
                 message,
             });
         },
-        serverLog: (message) => {
-            emit({ phase: "runtime", status: "starting", message });
-        },
     });
     owned = true;
-    emit({ phase: "runtime", status: "ready", percent: 100 });
+    emit({
+        phase: "runtime",
+        status: "ready",
+        percent: 100,
+        version: (await resolveVersion()) ?? meta.version,
+    });
 };
 
 const ensureModel = async (): Promise<void> => {
@@ -166,30 +198,34 @@ const deleteModel = async (): Promise<void> => {
     }
 };
 
-const runBusy = async (fn: () => Promise<void>): Promise<{ ready: true }> => {
+const runBusy = async (
+    phase: OllamaProgress["phase"],
+    fn: () => Promise<void>,
+): Promise<{ ok: true }> => {
     if (busy) throw new Error("ollama operation already running");
     busy = true;
     try {
         await fn();
-        return { ready: true };
+        return { ok: true };
     } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        emit({ phase: "runtime", status: "error", message });
+        emit({ phase, status: "error", message });
         throw e;
     } finally {
         busy = false;
     }
 };
 
-export async function ensureOllama(): Promise<{ ready: true }> {
-    return runBusy(async () => {
-        await ensureRuntime();
-        await ensureModel();
-    });
+export async function ensureOllamaRuntime(): Promise<{ ok: true }> {
+    return runBusy("runtime", ensureRuntime);
 }
 
-export async function reinstallOllama(): Promise<{ ready: true }> {
-    return runBusy(async () => {
+export async function ensureOllamaModel(): Promise<{ ok: true }> {
+    return runBusy("model", ensureModel);
+}
+
+export async function reinstallOllama(): Promise<{ ok: true }> {
+    return runBusy("runtime", async () => {
         await stopOllamaIfOwned();
         rmSync(join(app.getPath("userData"), RUNTIME_DIR), {
             recursive: true,
@@ -204,13 +240,21 @@ export async function reinstallOllama(): Promise<{ ready: true }> {
 export async function getOllamaStatus(): Promise<OllamaStatus> {
     let running = false;
     let modelPresent = false;
+    let installed = false;
+    let version: string | null = null;
     try {
-        running = await client().isRunning();
-        if (running) modelPresent = await hasModel();
+        const c = client();
+        version = await diskVersion();
+        installed = version != null;
+        running = await c.isRunning();
+        if (running) {
+            modelPresent = await hasModel();
+            version = (await apiVersion()) ?? version;
+        }
     } catch {
         /* offline */
     }
-    return { running, modelPresent, owned, busy };
+    return { running, modelPresent, owned, busy, installed, version };
 }
 
 export async function stopOllamaIfOwned(): Promise<void> {
@@ -220,7 +264,15 @@ export async function stopOllamaIfOwned(): Promise<void> {
 }
 
 export function registerOllamaIpc(): void {
-    ipcMain.handle("ollama:ensure", () => ensureOllama());
-    ipcMain.handle("ollama:reinstall", () => reinstallOllama());
-    ipcMain.handle("ollama:status", () => getOllamaStatus());
+    // ponytail: remove first so main HMR / re-entry never leaves half-registered channels
+    const handlers = {
+        "ollama:ensure-runtime": () => ensureOllamaRuntime(),
+        "ollama:ensure-model": () => ensureOllamaModel(),
+        "ollama:reinstall": () => reinstallOllama(),
+        "ollama:status": () => getOllamaStatus(),
+    } as const;
+    for (const [channel, fn] of Object.entries(handlers)) {
+        ipcMain.removeHandler(channel);
+        ipcMain.handle(channel, fn);
+    }
 }

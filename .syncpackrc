@@ -1,18 +1,15 @@
 {
   "semverGroups": [
     {
-      "label": "Pin all dependencies",
-      "dependencies": ["**"],
-      "packages": ["**"],
+      "label": "Exact versions only",
       "range": ""
     }
   ],
   "versionGroups": [
     {
-      "label": "Pin all dependencies",
-      "dependencies": ["**"],
-      "packages": ["**"],
-      "pinVersion": ""
+      "label": "Ignore local package version",
+      "dependencyTypes": ["local"],
+      "isIgnored": true
     }
   ]
 }

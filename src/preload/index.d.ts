@@ -6,6 +6,7 @@ type OllamaProgress =
           status: "checking" | "downloading" | "starting" | "ready" | "error";
           percent?: number;
           message?: string;
+          version?: string;
       }
     | {
           phase: "model";
@@ -27,15 +28,21 @@ declare global {
                 ) => Promise<Record<string, unknown>>;
             };
             ollama: {
-                ensure: () => Promise<{ ready: true }>;
-                reinstall: () => Promise<{ ready: true }>;
+                ensureRuntime: () => Promise<{ ok: true }>;
+                ensureModel: () => Promise<{ ok: true }>;
+                reinstall: () => Promise<{ ok: true }>;
                 status: () => Promise<{
                     running: boolean;
                     modelPresent: boolean;
                     owned: boolean;
                     busy: boolean;
+                    installed: boolean;
+                    version: string | null;
                 }>;
                 onProgress: (cb: (e: OllamaProgress) => void) => () => void;
+            };
+            notify: {
+                show: (p: { title: string; body?: string }) => Promise<boolean>;
             };
         };
     }
