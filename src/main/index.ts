@@ -149,15 +149,15 @@ function createTray(): void {
         .resize({ width: 16, height: 16 });
     tray = new Tray(trayIcon);
     tray.setToolTip("Docless");
-    tray.setContextMenu(
-        Menu.buildFromTemplate([
-            { label: "Open App", click: () => createMainWindow() },
-            { label: "Quick view", click: () => showCompactWindow() },
-            { type: "separator" },
-            { label: "Quit", click: () => app.quit() },
-        ]),
-    );
+    // Don't setContextMenu — on macOS that steals primary click. Menu on right-click only.
+    const menu = Menu.buildFromTemplate([
+        { label: "Open App", click: () => createMainWindow() },
+        { label: "Quick view", click: () => showCompactWindow() },
+        { type: "separator" },
+        { label: "Quit", click: () => app.quit() },
+    ]);
     tray.on("click", () => toggleCompactWindow());
+    tray.on("right-click", () => tray?.popUpContextMenu(menu));
 }
 
 app.whenReady().then(() => {
