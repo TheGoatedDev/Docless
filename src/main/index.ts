@@ -152,7 +152,6 @@ function createTray(): void {
     // Don't setContextMenu — on macOS that steals primary click. Menu on right-click only.
     const menu = Menu.buildFromTemplate([
         { label: "Open App", click: () => createMainWindow() },
-        { label: "Quick view", click: () => showCompactWindow() },
         { type: "separator" },
         { label: "Quit", click: () => app.quit() },
     ]);
