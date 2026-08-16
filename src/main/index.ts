@@ -10,7 +10,7 @@ import {
     Tray,
 } from "electron";
 import icon from "../../resources/icon.png?asset";
-import { initLogger, logger, registerLogIpc } from "./logger";
+import { logger, registerLogIpc } from "./logger";
 import { registerNotifyIpc } from "./notify";
 import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
 import { loadSettings, registerSettingsIpc } from "./settings";
@@ -170,8 +170,7 @@ function createTray(): void {
     tray.on("right-click", () => tray?.popUpContextMenu(menu));
 }
 
-app.whenReady().then(async () => {
-    await initLogger();
+app.whenReady().then(() => {
     electronApp.setAppUserModelId("com.docless.app");
 
     app.on("browser-window-created", (_, window) => {
