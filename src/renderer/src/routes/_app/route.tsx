@@ -43,7 +43,7 @@ function AppLayout(): React.JSX.Element {
                     <header
                         className={`app-drag relative z-20 flex h-11 shrink-0 items-center gap-2 border-b px-4 ${chrome ? (mac ? "pl-24" : "pr-28") : ""}`}
                     >
-                        <span className="font-heading text-sm font-medium">
+                        <span className="font-heading text-sm font-medium leading-none">
                             Docless
                         </span>
                         <Tooltip>

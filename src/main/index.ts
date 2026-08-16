@@ -53,7 +53,7 @@ function createMainWindow(): BrowserWindow {
         show: false,
         autoHideMenuBar: true,
         titleBarStyle: "hiddenInset",
-        trafficLightPosition: { x: 12, y: 16 },
+        trafficLightPosition: { x: 12, y: 14 },
         ...(process.platform !== "darwin"
             ? {
                   titleBarOverlay: {
