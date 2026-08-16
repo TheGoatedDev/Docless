@@ -5,7 +5,12 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@renderer/components/ui/sidebar";
-import { TooltipProvider } from "@renderer/components/ui/tooltip";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@renderer/components/ui/tooltip";
 import { useOllama } from "@renderer/stores/ollama";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 
@@ -14,7 +19,7 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout(): React.JSX.Element {
-    const { ready, busy, error } = useOllama();
+    const { ready, busy, error, message, status } = useOllama();
     const label = error
         ? "Ollama error"
         : busy
@@ -22,6 +27,9 @@ function AppLayout(): React.JSX.Element {
           : ready
             ? "Ollama"
             : "Ollama off";
+    const tip =
+        error ??
+        (busy ? message || status || "Busy" : ready ? "Ready" : "Offline");
     const dot = error
         ? "bg-destructive"
         : busy
@@ -40,14 +48,23 @@ function AppLayout(): React.JSX.Element {
                         <span className="font-heading text-sm font-medium md:hidden">
                             Docless
                         </span>
-                        <Badge
-                            className="ml-auto"
-                            variant="outline"
-                            render={<Link to="/status" />}
-                        >
-                            <span className={`size-1.5 rounded-full ${dot}`} />
-                            {label}
-                        </Badge>
+                        <Tooltip>
+                            <Badge
+                                className="ml-auto"
+                                variant="outline"
+                                render={
+                                    <TooltipTrigger
+                                        render={<Link to="/status" />}
+                                    />
+                                }
+                            >
+                                <span
+                                    className={`size-1.5 rounded-full ${dot}`}
+                                />
+                                {label}
+                            </Badge>
+                            <TooltipContent>{tip}</TooltipContent>
+                        </Tooltip>
                     </header>
                     <main className="mx-auto w-full max-w-4xl flex-1 p-6">
                         <Outlet />
