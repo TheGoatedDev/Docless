@@ -19,6 +19,9 @@ function AppLayout(): React.JSX.Element {
                 <SidebarInset>
                     <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
                         <SidebarTrigger className="-ml-1" />
+                        <span className="font-heading text-sm font-medium md:hidden">
+                            Docless
+                        </span>
                     </header>
                     <main className="mx-auto w-full max-w-4xl flex-1 p-6">
                         <Outlet />
