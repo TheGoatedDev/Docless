@@ -1,5 +1,5 @@
 import type { ElectronAPI } from "@electron-toolkit/preload";
-import type { OllamaProgress } from "./ollama-progress";
+import type { OllamaProgress } from "../shared/ollama";
 
 declare global {
     interface Window {

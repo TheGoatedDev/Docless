@@ -2,27 +2,13 @@ import { rmSync } from "node:fs";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain } from "electron";
 import { ElectronOllama } from "electron-ollama";
+import type { OllamaProgress } from "../shared/ollama";
+
+export type { OllamaProgress };
 
 const HOST = "http://127.0.0.1:11434";
 const MODEL = "glm-ocr";
 const RUNTIME_DIR = "electron-ollama";
-
-export type OllamaProgress =
-    | {
-          phase: "runtime";
-          status: "checking" | "downloading" | "starting" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          version?: string;
-      }
-    | {
-          phase: "model";
-          status: "checking" | "pulling" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          completed?: number;
-          total?: number;
-      };
 
 export type OllamaStatus = {
     running: boolean;

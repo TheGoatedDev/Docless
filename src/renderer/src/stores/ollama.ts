@@ -1,21 +1,7 @@
 import { create } from "zustand";
+import type { OllamaProgress } from "../../../shared/ollama";
 
-export type OllamaProgress =
-    | {
-          phase: "runtime";
-          status: "checking" | "downloading" | "starting" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          version?: string;
-      }
-    | {
-          phase: "model";
-          status: "checking" | "pulling" | "ready" | "error";
-          percent?: number;
-          message?: string;
-          completed?: number;
-          total?: number;
-      };
+export type { OllamaProgress };
 
 type State = {
     ready: boolean;
