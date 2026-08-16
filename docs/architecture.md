@@ -63,7 +63,7 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 ### Sidecar DB (ADR 0008)
 
 - **File:** `.docless/docless.sqlite` (WAL; checkpoint on quit). Opened from main when a watch root starts (`src/main/db`).
-- **Owner:** Electron main only (`better-sqlite3` + Drizzle schema/queries). Renderer never opens the file.
+- **Owner:** Electron main only (`better-sqlite3`, hand migrates). Renderer never opens the file.
 - **Identity:** canonical relative path (NFC, `/`, preserve case) = primary key (enforced when track lands — TGD-97).
 - **Track:** allowlist (case-insensitive): `pdf`, `png`, `jpg`, `jpeg`, `webp`, `tif`, `tiff`, `heic`, `gif`. No symlink follow. (TGD-97)
 - **documents columns:** `path`, `mtime_ms`, `size`, `content_hash`, `ocr_status`, `ocr_error`, `text`, `created_at_ms`, `updated_at_ms`.

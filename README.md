@@ -16,7 +16,7 @@ Local-first document app: watch folders, keep metadata on disk, OCR on-device. N
 
 ## Stack
 
-Electron + React + TypeScript ([electron-vite](https://electron-vite.org)), TanStack Router, Zustand, Tailwind/shadcn, Ollama, better-sqlite3 + Drizzle (main).
+Electron + React + TypeScript ([electron-vite](https://electron-vite.org)), TanStack Router, Zustand, Tailwind/shadcn, Ollama, better-sqlite3 (main).
 
 ## Setup
 
