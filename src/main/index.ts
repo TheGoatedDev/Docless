@@ -52,6 +52,17 @@ function createMainWindow(): BrowserWindow {
         height: 670,
         show: false,
         autoHideMenuBar: true,
+        titleBarStyle: "hiddenInset",
+        trafficLightPosition: { x: 12, y: 14 },
+        ...(process.platform !== "darwin"
+            ? {
+                  titleBarOverlay: {
+                      color: "#ffffff",
+                      symbolColor: "#0a0a0a",
+                      height: 48,
+                  },
+              }
+            : {}),
         ...(process.platform === "linux" ? { icon } : {}),
         webPreferences: {
             preload: join(__dirname, "../preload/index.js"),

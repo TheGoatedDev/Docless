@@ -20,6 +20,7 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout(): React.JSX.Element {
     const { ready, busy, error, message, status } = useOllama();
+    const mac = window.electron.process.platform === "darwin";
     const label = error
         ? "Ollama error"
         : busy
@@ -41,16 +42,17 @@ function AppLayout(): React.JSX.Element {
     return (
         <TooltipProvider>
             <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset>
-                    <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
-                        <SidebarTrigger className="-ml-1" />
-                        <span className="font-heading text-sm font-medium md:hidden">
+                <div className="flex h-svh w-full flex-col">
+                    <header
+                        className={`app-drag flex h-12 shrink-0 items-center gap-2 border-b px-4 ${mac ? "pl-20" : "pr-28"}`}
+                    >
+                        <SidebarTrigger className="app-no-drag -ml-1" />
+                        <span className="font-heading text-sm font-medium">
                             Docless
                         </span>
                         <Tooltip>
                             <Badge
-                                className="ml-auto"
+                                className="app-no-drag ml-auto"
                                 variant="outline"
                                 render={
                                     <TooltipTrigger
@@ -66,10 +68,15 @@ function AppLayout(): React.JSX.Element {
                             <TooltipContent>{tip}</TooltipContent>
                         </Tooltip>
                     </header>
-                    <main className="mx-auto w-full max-w-4xl flex-1 p-6">
-                        <Outlet />
-                    </main>
-                </SidebarInset>
+                    <div className="flex min-h-0 flex-1">
+                        <AppSidebar />
+                        <SidebarInset>
+                            <main className="mx-auto w-full max-w-4xl flex-1 p-6">
+                                <Outlet />
+                            </main>
+                        </SidebarInset>
+                    </div>
+                </div>
             </SidebarProvider>
         </TooltipProvider>
     );
