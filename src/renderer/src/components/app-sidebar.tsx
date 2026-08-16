@@ -1,3 +1,4 @@
+import { Button } from "@renderer/components/ui/button";
 import {
     Sidebar,
     SidebarContent,
@@ -6,9 +7,14 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarTrigger,
+    useSidebar,
 } from "@renderer/components/ui/sidebar";
-import { IconActivity, IconHome } from "@tabler/icons-react";
+import {
+    IconActivity,
+    IconChevronLeft,
+    IconChevronRight,
+    IconHome,
+} from "@tabler/icons-react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 
 const items = [
@@ -20,6 +26,8 @@ export function AppSidebar(
     props: React.ComponentProps<typeof Sidebar>,
 ): React.JSX.Element {
     const matchRoute = useMatchRoute();
+    const { state, toggleSidebar } = useSidebar();
+    const open = state === "expanded";
 
     return (
         <Sidebar collapsible="icon" {...props}>
@@ -43,7 +51,15 @@ export function AppSidebar(
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarTrigger className="absolute top-1/2 right-0 z-20 size-6 -translate-y-1/2 translate-x-1/2 rounded-full border bg-background shadow-sm" />
+            <Button
+                variant="ghost"
+                size="icon-sm"
+                className="absolute top-1/2 right-0 z-20 size-6 -translate-y-1/2 translate-x-1/2 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-none transition-none hover:bg-sidebar"
+                onClick={toggleSidebar}
+            >
+                {open ? <IconChevronLeft /> : <IconChevronRight />}
+                <span className="sr-only">Toggle Sidebar</span>
+            </Button>
         </Sidebar>
     );
 }
