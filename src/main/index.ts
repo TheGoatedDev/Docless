@@ -26,12 +26,16 @@ function loadRenderer(win: BrowserWindow): void {
     }
 }
 
-function wireWindow(win: BrowserWindow): void {
-    win.on("ready-to-show", () => win.show());
+function openExternal(win: BrowserWindow): void {
     win.webContents.setWindowOpenHandler((details) => {
         void shell.openExternal(details.url);
         return { action: "deny" };
     });
+}
+
+function wireWindow(win: BrowserWindow): void {
+    win.on("ready-to-show", () => win.show());
+    openExternal(win);
     loadRenderer(win);
 }
 
@@ -120,26 +124,9 @@ function ensureCompactWindow(): BrowserWindow {
     compactWindow.on("blur", () => {
         if (compactWindow && !compactWindow.isDestroyed()) compactWindow.hide();
     });
-    compactWindow.webContents.setWindowOpenHandler((details) => {
-        void shell.openExternal(details.url);
-        return { action: "deny" };
-    });
+    openExternal(compactWindow);
     loadRenderer(compactWindow);
     return compactWindow;
-}
-
-function showCompactWindow(): void {
-    const win = ensureCompactWindow();
-    const reveal = (): void => {
-        positionBelowTray(win);
-        win.show();
-        win.focus();
-    };
-    if (win.webContents.isLoading()) {
-        win.webContents.once("did-finish-load", reveal);
-    } else {
-        reveal();
-    }
 }
 
 function toggleCompactWindow(): void {
@@ -151,7 +138,17 @@ function toggleCompactWindow(): void {
         compactWindow.hide();
         return;
     }
-    showCompactWindow();
+    const win = ensureCompactWindow();
+    const reveal = (): void => {
+        positionBelowTray(win);
+        win.show();
+        win.focus();
+    };
+    if (win.webContents.isLoading()) {
+        win.webContents.once("did-finish-load", reveal);
+    } else {
+        reveal();
+    }
 }
 
 function createTray(): void {

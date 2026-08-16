@@ -1,9 +1,6 @@
-import { Button } from "@renderer/components/ui/button";
 import {
     Sidebar,
     SidebarContent,
-    SidebarGroup,
-    SidebarGroupContent,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
@@ -18,12 +15,9 @@ const items = [
     { title: "Status", to: "/status", icon: IconActivity },
 ] as const;
 
-export function AppSidebar(
-    props: React.ComponentProps<typeof Sidebar>,
-): React.JSX.Element {
+export function AppSidebar(): React.JSX.Element {
     const matchRoute = useMatchRoute();
     const { state, toggleSidebar, setOpenMobile } = useSidebar();
-    const open = state === "expanded";
 
     useEffect(() => {
         if (window.api.windowRole !== "compact") return;
@@ -33,39 +27,34 @@ export function AppSidebar(
     }, [setOpenMobile]);
 
     return (
-        <Sidebar collapsible="icon" {...props}>
+        <Sidebar collapsible="icon">
             <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupContent>
-                        <SidebarMenu className="gap-1">
-                            {items.map((item) => (
-                                <SidebarMenuItem key={item.to}>
-                                    <SidebarMenuButton
-                                        render={<Link to={item.to} />}
-                                        isActive={!!matchRoute({ to: item.to })}
-                                        tooltip={item.title}
-                                    >
-                                        <item.icon />
-                                        <span>{item.title}</span>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+                <SidebarMenu className="gap-1 p-2">
+                    {items.map((item) => (
+                        <SidebarMenuItem key={item.to}>
+                            <SidebarMenuButton
+                                render={<Link to={item.to} />}
+                                isActive={!!matchRoute({ to: item.to })}
+                                tooltip={item.title}
+                            >
+                                <item.icon />
+                                <span>{item.title}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                </SidebarMenu>
             </SidebarContent>
             <div className="absolute inset-y-0 right-0 z-20 hidden translate-x-1/2 items-center md:flex">
-                <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="size-6 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-none transition-none hover:bg-sidebar active:translate-y-0"
+                <button
+                    type="button"
+                    className="flex size-6 items-center justify-center rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground"
                     onClick={toggleSidebar}
                 >
                     <IconChevronLeft
-                        className={`transition-transform duration-200 ${open ? "" : "rotate-180"}`}
+                        className={`size-4 transition-transform duration-200 ${state === "expanded" ? "" : "rotate-180"}`}
                     />
                     <span className="sr-only">Toggle Sidebar</span>
-                </Button>
+                </button>
             </div>
         </Sidebar>
     );

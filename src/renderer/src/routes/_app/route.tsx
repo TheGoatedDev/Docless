@@ -22,23 +22,25 @@ function AppLayout(): React.JSX.Element {
     const { ready, busy, error, message, status } = useOllama();
     const mac = window.electron.process.platform === "darwin";
     const chrome = window.api.windowRole !== "compact";
-    const label = error
-        ? "Ollama error"
+    const ollama = error
+        ? {
+              label: "Ollama error",
+              tip: error,
+              dot: "bg-destructive",
+          }
         : busy
-          ? "Ollama…"
+          ? {
+                label: "Ollama…",
+                tip: message || status || "Busy",
+                dot: "bg-amber-500",
+            }
           : ready
-            ? "Ollama"
-            : "Ollama off";
-    const tip =
-        error ??
-        (busy ? message || status || "Busy" : ready ? "Ready" : "Offline");
-    const dot = error
-        ? "bg-destructive"
-        : busy
-          ? "bg-amber-500"
-          : ready
-            ? "bg-emerald-500"
-            : "bg-muted-foreground/40";
+            ? { label: "Ollama", tip: "Ready", dot: "bg-emerald-500" }
+            : {
+                  label: "Ollama off",
+                  tip: "Offline",
+                  dot: "bg-muted-foreground/40",
+              };
 
     return (
         <TooltipProvider>
@@ -62,11 +64,11 @@ function AppLayout(): React.JSX.Element {
                                 }
                             >
                                 <span
-                                    className={`size-1.5 rounded-full ${dot}`}
+                                    className={`size-1.5 rounded-full ${ollama.dot}`}
                                 />
-                                {label}
+                                {ollama.label}
                             </Badge>
-                            <TooltipContent>{tip}</TooltipContent>
+                            <TooltipContent>{ollama.tip}</TooltipContent>
                         </Tooltip>
                     </header>
                     <div className="flex min-h-0 flex-1">
