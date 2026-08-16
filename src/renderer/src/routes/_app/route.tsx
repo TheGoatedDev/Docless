@@ -1,5 +1,6 @@
 import { AppSidebar } from "@renderer/components/app-sidebar";
 import { Badge } from "@renderer/components/ui/badge";
+import { Input } from "@renderer/components/ui/input";
 import {
     SidebarInset,
     SidebarProvider,
@@ -12,6 +13,7 @@ import {
     TooltipTrigger,
 } from "@renderer/components/ui/tooltip";
 import { useOllama } from "@renderer/stores/ollama";
+import { IconSearch } from "@tabler/icons-react";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app")({
@@ -53,6 +55,14 @@ function AppLayout(): React.JSX.Element {
                         <span className="font-heading text-sm font-medium leading-none">
                             Docless
                         </span>
+                        <div className="app-no-drag relative ml-2 w-56 max-w-xs flex-1">
+                            <IconSearch className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                type="search"
+                                placeholder="Search…"
+                                className="h-8 pl-8"
+                            />
+                        </div>
                         <Tooltip>
                             <Badge
                                 className="app-no-drag ml-auto"
