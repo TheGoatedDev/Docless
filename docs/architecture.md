@@ -59,6 +59,7 @@ No document DB, no `.docless` writer, no search index yet.
 ## IPC (`window.api`)
 
 - `settings.get` / `settings.set` → `{ watchPaths: string[] }`
+- `dialog.openDirectory` → `string | null`
 - `ollama.ensureRuntime` / `ensureModel` / `reinstall` / `status` / `onProgress`
 - `notify.show`
 - `windowRole`: `"main"` \| `"compact"`

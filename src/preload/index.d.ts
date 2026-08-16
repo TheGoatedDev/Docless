@@ -45,6 +45,9 @@ declare global {
             notify: {
                 show: (p: { title: string; body?: string }) => Promise<boolean>;
             };
+            dialog: {
+                openDirectory: () => Promise<string | null>;
+            };
         };
     }
 }

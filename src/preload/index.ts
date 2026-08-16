@@ -60,6 +60,10 @@ const api = {
         show: (p: { title: string; body?: string }): Promise<boolean> =>
             ipcRenderer.invoke("notify:show", p),
     },
+    dialog: {
+        openDirectory: (): Promise<string | null> =>
+            ipcRenderer.invoke("dialog:openDirectory"),
+    },
 };
 
 if (process.contextIsolated) {

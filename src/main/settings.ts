@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { app, ipcMain } from "electron";
+import { app, dialog, ipcMain } from "electron";
 
 export type Settings = {
     watchPaths: string[];
@@ -47,4 +47,10 @@ export function saveSettings(data: Settings): Settings {
 export function registerSettingsIpc(): void {
     ipcMain.handle("settings:get", () => loadSettings());
     ipcMain.handle("settings:set", (_, data: Settings) => saveSettings(data));
+    ipcMain.handle("dialog:openDirectory", async () => {
+        const { canceled, filePaths } = await dialog.showOpenDialog({
+            properties: ["openDirectory"],
+        });
+        return canceled ? null : (filePaths[0] ?? null);
+    });
 }

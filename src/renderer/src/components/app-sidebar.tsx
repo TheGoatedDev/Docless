@@ -13,6 +13,7 @@ import {
     IconChevronLeft,
     IconCode,
     IconHome,
+    IconSettings,
 } from "@tabler/icons-react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -23,6 +24,7 @@ const bottom = [
         ? ([{ title: "Dev", to: "/dev", icon: IconCode }] as const)
         : []),
     { title: "Status", to: "/status", icon: IconActivity },
+    { title: "Settings", to: "/settings", icon: IconSettings },
 ] as const;
 
 export function AppSidebar(): React.JSX.Element {
