@@ -21,6 +21,7 @@ declare global {
     interface Window {
         electron: ElectronAPI;
         api: {
+            windowRole: "main" | "compact";
             settings: {
                 get: () => Promise<Record<string, unknown>>;
                 set: (
