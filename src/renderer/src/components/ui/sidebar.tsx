@@ -182,6 +182,7 @@ function Sidebar({
     }
 
     if (isMobile) {
+        const main = window.api.windowRole === "main";
         return (
             <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
                 <SheetContent
@@ -189,7 +190,10 @@ function Sidebar({
                     data-sidebar="sidebar"
                     data-slot="sidebar"
                     data-mobile="true"
-                    className="inset-y-4 h-auto w-(--sidebar-width) rounded-lg bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+                    className={cn(
+                        "h-auto w-(--sidebar-width) rounded-lg bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden",
+                        main ? "top-11 bottom-4" : "inset-y-4",
+                    )}
                     style={
                         {
                             "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -203,7 +207,7 @@ function Sidebar({
                             Displays the mobile sidebar.
                         </SheetDescription>
                     </SheetHeader>
-                    <div className="flex h-full w-full flex-col pt-4">
+                    <div className="flex h-full w-full flex-col">
                         {children}
                     </div>
                 </SheetContent>
