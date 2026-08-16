@@ -22,6 +22,13 @@ declare global {
         electron: ElectronAPI;
         api: {
             windowRole: "main" | "compact";
+            log: {
+                write: (
+                    level: "debug" | "info" | "warn" | "error" | "fatal",
+                    msg: string,
+                    data?: Record<string, unknown>,
+                ) => void;
+            };
             settings: {
                 get: () => Promise<{ watchPaths: string[] }>;
                 set: (data: {

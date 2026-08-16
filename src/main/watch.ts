@@ -1,14 +1,16 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import chokidar, { type FSWatcher } from "chokidar";
+import { log as rootLog } from "./logger";
 
+const log = rootLog.child({ mod: "watch" });
 const watchers = new Map<string, FSWatcher>();
 
 function ensureDocless(root: string): void {
     try {
         mkdirSync(join(root, ".docless"), { recursive: true });
     } catch (err) {
-        console.error("[watch] .docless mkdir failed", root, err);
+        log.error({ root, err }, ".docless mkdir failed");
     }
 }
 
@@ -30,9 +32,9 @@ function start(root: string): void {
         "addDir",
         "unlinkDir",
     ] as const) {
-        w.on(ev, (path) => console.log("[watch]", ev, path));
+        w.on(ev, (path) => log.info({ ev, path }, "fs event"));
     }
-    w.on("error", (err) => console.error("[watch] error", root, err));
+    w.on("error", (err) => log.error({ root, err }, "watcher error"));
     watchers.set(root, w);
 }
 

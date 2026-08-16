@@ -24,6 +24,15 @@ const windowRole = process.argv.some((a) => a === "--docless-window=compact")
 
 const api = {
     windowRole,
+    log: {
+        write: (
+            level: "debug" | "info" | "warn" | "error" | "fatal",
+            msg: string,
+            data?: Record<string, unknown>,
+        ): void => {
+            ipcRenderer.send("log:write", { level, msg, data });
+        },
+    },
     settings: {
         get: (): Promise<{ watchPaths: string[] }> =>
             ipcRenderer.invoke("settings:get"),
@@ -71,7 +80,14 @@ if (process.contextIsolated) {
         contextBridge.exposeInMainWorld("electron", electronAPI);
         contextBridge.exposeInMainWorld("api", api);
     } catch (error) {
-        console.error(error);
+        ipcRenderer.send("log:write", {
+            level: "error",
+            msg: error instanceof Error ? error.message : String(error),
+            data:
+                error instanceof Error
+                    ? { stack: error.stack, src: "preload" }
+                    : { src: "preload" },
+        });
     }
 } else {
     // @ts-expect-error contextIsolation false

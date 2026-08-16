@@ -10,6 +10,7 @@ import {
     Tray,
 } from "electron";
 import icon from "../../resources/icon.png?asset";
+import { initLogger, log, registerLogIpc } from "./logger";
 import { registerNotifyIpc } from "./notify";
 import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
 import { loadSettings, registerSettingsIpc } from "./settings";
@@ -169,14 +170,16 @@ function createTray(): void {
     tray.on("right-click", () => tray?.popUpContextMenu(menu));
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+    await initLogger();
     electronApp.setAppUserModelId("com.docless.app");
 
     app.on("browser-window-created", (_, window) => {
         optimizer.watchWindowShortcuts(window);
     });
 
-    ipcMain.on("ping", () => console.log("pong"));
+    ipcMain.on("ping", () => log.info("pong"));
+    registerLogIpc();
     registerSettingsIpc();
     registerOllamaIpc();
     registerNotifyIpc();
