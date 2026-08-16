@@ -1,6 +1,6 @@
 # Architecture
 
-As-built map of Docless. Product pipeline beyond watch (index → search → OCR jobs) is not built yet — see Status in the README and ADRs 0006–0007.
+As-built map of Docless. Product pipeline beyond watch (index → search → OCR jobs) is not built yet — see Status in the README and ADRs 0006–0008.
 
 ## Purpose
 
@@ -25,7 +25,7 @@ flowchart LR
   renderer --> preload --> main
   main --> settings[(userData/settings.json)]
   main --> watch[chokidar per watchPath]
-  watch --> docless["root/.docless/"]
+  watch --> docless["root/.docless/docless.sqlite"]
   main --> ollama[Ollama localhost]
   main --> tray[Tray / windows]
 ```
@@ -54,11 +54,26 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 | Path | Contents |
 |------|----------|
 | `app.getPath("userData")/settings.json` | App settings (`watchPaths: string[]`) |
-| `<watchRoot>/.docless/` | Sidecar dir (mkdir only; layout undecided) |
+| `<watchRoot>/.docless/` | Sidecar dir (mkdir + planned layout; not written yet) |
+| `<watchRoot>/.docless/docless.sqlite` | Per-root library DB (ADR 0008) — not implemented yet |
+| `<watchRoot>/.docless/.gitignore` | `*` so sidecar junk stays out of git |
 | `userData/electron-ollama/` | Managed Ollama binary (when installed by app) |
 | Ollama’s own model store | `glm-ocr` weights (not under app control) |
 
-No document DB, no search index yet. Watch events log in main only.
+### Sidecar DB (planned — ADR 0008)
+
+- **File:** `.docless/docless.sqlite` (WAL; checkpoint on quit).
+- **Owner:** Electron main only (`better-sqlite3` + Drizzle schema/queries).
+- **Identity:** canonical relative path (NFC, `/`, preserve case) = primary key.
+- **Track:** allowlist (case-insensitive): `pdf`, `png`, `jpg`, `jpeg`, `webp`, `tif`, `tiff`, `heic`, `gif`. No symlink follow.
+- **documents columns:** `path`, `mtime_ms`, `size`, `content_hash`, `ocr_status`, `ocr_error`, `text`, `created_at_ms`, `updated_at_ms`.
+- **ocr_status:** `pending` \| `running` \| `done` \| `failed` \| `skipped`.
+- **Change detect:** mtime+size gate → SHA-256; hash change → `pending`, keep old `text` until new OCR succeeds.
+- **Delete:** unlink → hard delete row. Rename = new path (re-OCR).
+- **Migrate:** forward-only `PRAGMA user_version` steps in transactions; backup `docless.sqlite.bak-v{k}` before each step (keep ~2); refuse DB newer than app. Corrupt open → quarantine file + fresh DB + notify.
+- **Non-goals here:** FTS, page table, global `userData` index, multi-instance.
+
+Watch events still log in main only until track/OCR stories land.
 
 ## IPC (`window.api`)
 
@@ -70,7 +85,7 @@ No document DB, no search index yet. Watch events log in main only.
 
 ## Not built
 
-`.docless` layout files, OCR job queue, calling `glm-ocr` for pages, search/index, tags, document viewer, watch→renderer IPC.
+Writing `docless.sqlite` / migrates, initial walk + track, OCR job queue, calling `glm-ocr`, FTS/search, tags, document viewer, watch→renderer IPC.
 
 ## Decisions
 
