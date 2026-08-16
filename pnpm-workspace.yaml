@@ -1,10 +1,12 @@
 blockExoticSubdeps: false
 strictDepBuilds: false
 onlyBuiltDependencies:
+  - better-sqlite3
   - electron
   - esbuild
   - electron-winstaller
 allowBuilds:
+  better-sqlite3: true
   electron: true
   electron-winstaller: true
   esbuild: true

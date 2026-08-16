@@ -1,6 +1,5 @@
-import { mkdirSync } from "node:fs";
-import { join } from "node:path";
 import chokidar, { type FSWatcher } from "chokidar";
+import { closeLibrary, openLibrary } from "./db";
 import { logger as rootLogger } from "./logger";
 
 const logger = rootLogger.child({ mod: "watch" });
@@ -8,9 +7,9 @@ const watchers = new Map<string, FSWatcher>();
 
 function ensureDocless(root: string): void {
     try {
-        mkdirSync(join(root, ".docless"), { recursive: true });
+        openLibrary(root);
     } catch (err) {
-        logger.error({ root, err }, ".docless mkdir failed");
+        logger.error({ root, err }, ".docless open failed");
     }
 }
 
@@ -43,6 +42,7 @@ async function stop(root: string): Promise<void> {
     const w = watchers.get(root);
     if (!w) return;
     watchers.delete(root);
+    closeLibrary(root);
     await w.close();
     logger.info({ root }, "watch path removed");
 }
