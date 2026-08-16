@@ -23,10 +23,10 @@ declare global {
         api: {
             windowRole: "main" | "compact";
             settings: {
-                get: () => Promise<Record<string, unknown>>;
-                set: (
-                    data: Record<string, unknown>,
-                ) => Promise<Record<string, unknown>>;
+                get: () => Promise<{ watchPaths: string[] }>;
+                set: (data: {
+                    watchPaths: string[];
+                }) => Promise<{ watchPaths: string[] }>;
             };
             ollama: {
                 ensureRuntime: () => Promise<{ ok: true }>;

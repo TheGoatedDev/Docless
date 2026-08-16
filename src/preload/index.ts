@@ -25,11 +25,11 @@ const windowRole = process.argv.some((a) => a === "--docless-window=compact")
 const api = {
     windowRole,
     settings: {
-        get: (): Promise<Record<string, unknown>> =>
+        get: (): Promise<{ watchPaths: string[] }> =>
             ipcRenderer.invoke("settings:get"),
-        set: (
-            data: Record<string, unknown>,
-        ): Promise<Record<string, unknown>> =>
+        set: (data: {
+            watchPaths: string[];
+        }): Promise<{ watchPaths: string[] }> =>
             ipcRenderer.invoke("settings:set", data),
     },
     ollama: {

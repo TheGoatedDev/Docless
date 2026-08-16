@@ -2,9 +2,11 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { app, ipcMain } from "electron";
 
-export type Settings = Record<string, unknown>;
+export type Settings = {
+    watchPaths: string[];
+};
 
-const defaults: Settings = {};
+const defaults: Settings = { watchPaths: [] };
 
 const file = (): string => join(app.getPath("userData"), "settings.json");
 
