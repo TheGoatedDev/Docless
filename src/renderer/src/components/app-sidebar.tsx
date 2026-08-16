@@ -11,6 +11,7 @@ import {
 } from "@renderer/components/ui/sidebar";
 import { IconActivity, IconChevronLeft, IconHome } from "@tabler/icons-react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 const items = [
     { title: "Home", to: "/", icon: IconHome },
@@ -21,8 +22,15 @@ export function AppSidebar(
     props: React.ComponentProps<typeof Sidebar>,
 ): React.JSX.Element {
     const matchRoute = useMatchRoute();
-    const { state, toggleSidebar } = useSidebar();
+    const { state, toggleSidebar, setOpenMobile } = useSidebar();
     const open = state === "expanded";
+
+    useEffect(() => {
+        if (window.api.windowRole !== "compact") return;
+        const close = (): void => setOpenMobile(false);
+        window.addEventListener("blur", close);
+        return () => window.removeEventListener("blur", close);
+    }, [setOpenMobile]);
 
     return (
         <Sidebar collapsible="icon" {...props}>
