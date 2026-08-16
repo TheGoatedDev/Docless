@@ -40,7 +40,7 @@ function AppLayout(): React.JSX.Element {
             <SidebarProvider>
                 <div className="flex h-svh w-full flex-col">
                     <header
-                        className={`app-drag relative z-20 flex h-11 shrink-0 items-center gap-2 border-b px-4 ${mac ? "pl-20" : "pr-28"}`}
+                        className={`app-drag relative z-20 flex h-11 shrink-0 items-center gap-2 border-b px-4 ${mac ? "pl-24" : "pr-28"}`}
                     >
                         <span className="font-heading text-sm font-medium">
                             Docless
