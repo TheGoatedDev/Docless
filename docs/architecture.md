@@ -1,6 +1,6 @@
 # Architecture
 
-As-built map of Docless. Product pipeline beyond watch (index → search → OCR jobs) is not built yet — see Status in the README and ADRs 0006–0008.
+As-built map of Docless. Search / viewer / OCR retry are not built yet — see Status in the README and ADRs 0006–0008.
 
 ## Purpose
 
@@ -16,7 +16,7 @@ src/renderer/   React UI (TanStack Router, Zustand, shadcn)
 
 | Layer | Owns |
 |-------|------|
-| **main** | FS, watchers, OS notifications, tray, Ollama lifecycle, `settings.json` |
+| **main** | FS, watchers, OS notifications, tray, Ollama lifecycle + OCR, `settings.json` |
 | **preload** | Thin IPC surface; no business logic |
 | **renderer** | UI + client stores; talks only through `window.api` |
 
@@ -26,7 +26,10 @@ flowchart LR
   main --> settings[(userData/settings.json)]
   main --> watch[chokidar per watchPath]
   watch --> docless["root/.docless/docless.sqlite"]
-  main --> ollama[Ollama localhost]
+  main --> ollama[Ollama localhost glm-ocr]
+  main --> ocr[OCR drain pending rows]
+  ocr --> ollama
+  ocr --> docless
   main --> tray[Tray / windows]
 ```
 
@@ -69,6 +72,7 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 - **documents columns:** `path`, `mtime_ms`, `size`, `content_hash`, `ocr_status`, `ocr_error`, `text`, `created_at_ms`, `updated_at_ms`.
 - **ocr_status:** `pending` \| `running` \| `done` \| `failed` \| `skipped`.
 - **Change detect:** mtime+size gate → SHA-256; hash change → `pending`, keep old `text` until new OCR succeeds.
+- **OCR:** main drain loop (`src/main/ocr.ts`) claims one `pending` → `running`, calls local `glm-ocr` via Ollama `/api/generate` only (`127.0.0.1`), writes `text` + `done` or `ocr_error` + `failed`. Images (png/jpg/jpeg/webp/gif) as-is; PDF every page rasterized (`pdfjs-dist` + `@napi-rs/canvas`) then OCR’d and joined with `\n\n`. heic/tif/tiff → failed with clear error. Single concurrent job; kick on track pending + model ready. Stale `running` reset to `pending` on boot. No claim while Ollama/model down (stays pending).
 - **Delete:** unlink → hard delete row. Rename = new path (re-OCR).
 - **Migrate:** forward-only `PRAGMA user_version` TS steps in transactions; backup `docless.sqlite.bak-v{k}` before each step (keep ~2); refuse DB newer than app + notify. Corrupt open → quarantine `docless.sqlite.corrupt-<ts>` + fresh DB + notify.
 - **Non-goals:** FTS, page table, rename-merge, multi-instance, global `userData` index.
@@ -84,7 +88,7 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 
 ## Not built
 
-OCR job queue, calling `glm-ocr`, FTS/search, tags, document viewer.
+OCR retry / multi-job queue polish (TGD-100), FTS/search, tags, document viewer.
 
 ## Decisions
 
