@@ -238,6 +238,22 @@ export function kickOcr(): void {
     void loop();
 }
 
+/** failed → pending; no-op if not failed. */
+export function retryOcr(root: string, path: string): boolean {
+    const db = getLibrary(root);
+    if (!db) return false;
+    const r = db
+        .prepare(
+            `UPDATE documents SET ocr_status = 'pending', ocr_error = NULL, updated_at_ms = ?
+       WHERE path = ? AND ocr_status = 'failed'`,
+        )
+        .run(Date.now(), path);
+    if (!r.changes) return false;
+    notifyDocumentsChanged();
+    kickOcr();
+    return true;
+}
+
 export function startOcr(): void {
     if (started) return;
     started = true;

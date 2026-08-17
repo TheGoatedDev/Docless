@@ -1,4 +1,5 @@
 import { Badge } from "@renderer/components/ui/badge";
+import { Button } from "@renderer/components/ui/button";
 import { useDocuments } from "@renderer/stores/documents";
 import { useSettings } from "@renderer/stores/settings";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -47,8 +48,27 @@ function Home(): React.JSX.Element {
                                 <div className="text-muted-foreground truncate font-mono text-xs">
                                     {d.root}/{d.path}
                                 </div>
+                                {d.ocrStatus === "failed" && d.ocrError ? (
+                                    <div className="text-destructive mt-0.5 truncate text-xs">
+                                        {d.ocrError}
+                                    </div>
+                                ) : null}
                             </div>
                             <Badge variant="secondary">{d.ocrStatus}</Badge>
+                            {d.ocrStatus === "failed" ? (
+                                <Button
+                                    size="xs"
+                                    variant="outline"
+                                    onClick={() => {
+                                        void window.api.documents.retry({
+                                            root: d.root,
+                                            path: d.path,
+                                        });
+                                    }}
+                                >
+                                    Retry
+                                </Button>
+                            ) : null}
                         </li>
                     ))}
                 </ul>

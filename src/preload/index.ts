@@ -61,6 +61,8 @@ const api = {
     documents: {
         list: (): Promise<DocumentRow[]> =>
             ipcRenderer.invoke("documents:list"),
+        retry: (p: { root: string; path: string }): Promise<boolean> =>
+            ipcRenderer.invoke("documents:retry", p),
         onChange: (cb: () => void): (() => void) => {
             const handler = (): void => cb();
             ipcRenderer.on("documents:changed", handler);
