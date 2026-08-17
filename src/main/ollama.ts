@@ -207,11 +207,43 @@ export async function ensureOllamaRuntime(): Promise<{ ok: true }> {
 }
 
 export async function ensureOllamaModel(): Promise<{ ok: true }> {
-    return runBusy("model", ensureModel);
+    const r = await runBusy("model", ensureModel);
+    const { kickOcr } = await import("./ocr");
+    kickOcr();
+    return r;
+}
+
+/** OCR one image (base64, no data: prefix) via local glm-ocr. */
+export async function ocrGenerate(imageB64: string): Promise<string> {
+    const res = await fetch(`${HOST}/api/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(5 * 60_000),
+        body: JSON.stringify({
+            model: MODEL,
+            // [img-0] required on some Ollama builds for glm-ocr renderer
+            prompt: "Text Recognition: [img-0]",
+            images: [imageB64],
+            stream: false,
+        }),
+    });
+    if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(
+            res.status === 404
+                ? "glm-ocr model not present"
+                : `Ollama generate failed: ${res.status}${body ? ` ${body.slice(0, 200)}` : ""}`,
+        );
+    }
+    const data = (await res.json()) as { response?: string; error?: string };
+    if (data.error) throw new Error(data.error);
+    const text = data.response?.trim() ?? "";
+    if (!text) throw new Error("OCR returned no text");
+    return text;
 }
 
 export async function reinstallOllama(): Promise<{ ok: true }> {
-    return runBusy("runtime", async () => {
+    const r = await runBusy("runtime", async () => {
         await stopOllamaIfOwned();
         rmSync(join(app.getPath("userData"), RUNTIME_DIR), {
             recursive: true,
@@ -221,6 +253,9 @@ export async function reinstallOllama(): Promise<{ ok: true }> {
         if (await hasModel()) await deleteModel();
         await pullModel();
     });
+    const { kickOcr } = await import("./ocr");
+    kickOcr();
+    return r;
 }
 
 export async function getOllamaStatus(): Promise<OllamaStatus> {

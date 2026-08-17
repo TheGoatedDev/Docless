@@ -4,6 +4,7 @@ import { extname, join, relative, sep } from "node:path";
 import { getLibrary } from "./db";
 import { notifyDocumentsChanged } from "./documents";
 import { logger as rootLogger } from "./logger";
+import { kickOcr } from "./ocr";
 
 const logger = rootLogger.child({ mod: "track" });
 
@@ -98,6 +99,7 @@ export async function upsert(root: string, abs: string): Promise<void> {
         ).run(path, mtime_ms, size, content_hash, now, now);
         logger.info({ root, path }, "document added");
         notifyDocumentsChanged();
+        kickOcr();
         return;
     }
 
@@ -115,6 +117,7 @@ export async function upsert(root: string, abs: string): Promise<void> {
     ).run(mtime_ms, size, content_hash, now, path);
     logger.info({ root, path }, "document changed");
     notifyDocumentsChanged();
+    kickOcr();
 }
 
 export function remove(root: string, abs: string): void {
