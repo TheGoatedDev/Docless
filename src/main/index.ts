@@ -3,6 +3,7 @@ import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow, Menu, nativeImage, shell, Tray } from "electron";
 import icon from "../../resources/icon.png?asset";
 import { closeAllLibraries } from "./db";
+import { registerDocumentsIpc } from "./documents";
 import { registerLogIpc } from "./logger";
 import { registerNotifyIpc } from "./notify";
 import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
@@ -174,6 +175,7 @@ app.whenReady().then(() => {
     registerSettingsIpc();
     registerOllamaIpc();
     registerNotifyIpc();
+    registerDocumentsIpc();
     syncWatchPaths(loadSettings().watchPaths);
 
     createTray();

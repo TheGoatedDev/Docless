@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { createReadStream, existsSync, lstatSync } from "node:fs";
 import { extname, join, relative, sep } from "node:path";
 import { getLibrary } from "./db";
+import { notifyDocumentsChanged } from "./documents";
 import { logger as rootLogger } from "./logger";
 
 const logger = rootLogger.child({ mod: "track" });
@@ -96,6 +97,7 @@ export async function upsert(root: string, abs: string): Promise<void> {
        VALUES (?, ?, ?, ?, 'pending', NULL, NULL, ?, ?)`,
         ).run(path, mtime_ms, size, content_hash, now, now);
         logger.info({ root, path }, "document added");
+        notifyDocumentsChanged();
         return;
     }
 
@@ -112,6 +114,7 @@ export async function upsert(root: string, abs: string): Promise<void> {
        WHERE path = ?`,
     ).run(mtime_ms, size, content_hash, now, path);
     logger.info({ root, path }, "document changed");
+    notifyDocumentsChanged();
 }
 
 export function remove(root: string, abs: string): void {
@@ -120,7 +123,10 @@ export function remove(root: string, abs: string): void {
     const path = relPath(root, abs);
     if (!path || path.startsWith("..")) return;
     const r = db.prepare("DELETE FROM documents WHERE path = ?").run(path);
-    if (r.changes) logger.info({ root, path }, "document removed");
+    if (r.changes) {
+        logger.info({ root, path }, "document removed");
+        notifyDocumentsChanged();
+    }
 }
 
 export function prune(root: string): void {
@@ -137,7 +143,10 @@ export function prune(root: string): void {
             n++;
         }
     }
-    if (n) logger.info({ root, n }, "pruned missing documents");
+    if (n) {
+        logger.info({ root, n }, "pruned missing documents");
+        notifyDocumentsChanged();
+    }
 }
 
 export function schedule(root: string, abs: string): void {

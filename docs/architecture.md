@@ -78,12 +78,13 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 - `settings.get` / `settings.set` → `{ watchPaths: string[] }` (set also resyncs watchers)
 - `dialog.openDirectory` → `string | null`
 - `ollama.ensureRuntime` / `ensureModel` / `reinstall` / `status` / `onProgress`
+- `documents.list` / `onChange` → union of open sidecars (name, root, path, ocrStatus); push on track/watch changes
 - `notify.show`
 - `windowRole`: `"main"` \| `"compact"`
 
 ## Not built
 
-OCR job queue, calling `glm-ocr`, FTS/search, tags, document viewer, watch→renderer IPC.
+OCR job queue, calling `glm-ocr`, FTS/search, tags, document viewer.
 
 ## Decisions
 

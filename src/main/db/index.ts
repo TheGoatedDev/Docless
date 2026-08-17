@@ -190,6 +190,10 @@ export function getLibrary(root: string): Database.Database | null {
     return pools.get(root) ?? null;
 }
 
+export function listLibraryRoots(): string[] {
+    return [...pools.keys()];
+}
+
 function checkpoint(db: Database.Database): void {
     try {
         db.pragma("wal_checkpoint(TRUNCATE)");

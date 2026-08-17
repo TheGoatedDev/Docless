@@ -1,5 +1,6 @@
 import { electronAPI } from "@electron-toolkit/preload";
 import { contextBridge, ipcRenderer } from "electron";
+import type { DocumentRow } from "../shared/document";
 import type { OllamaProgress } from "../shared/ollama";
 
 const windowRole = process.argv.some((a) => a === "--docless-window=compact")
@@ -56,6 +57,17 @@ const api = {
     dialog: {
         openDirectory: (): Promise<string | null> =>
             ipcRenderer.invoke("dialog:openDirectory"),
+    },
+    documents: {
+        list: (): Promise<DocumentRow[]> =>
+            ipcRenderer.invoke("documents:list"),
+        onChange: (cb: () => void): (() => void) => {
+            const handler = (): void => cb();
+            ipcRenderer.on("documents:changed", handler);
+            return () => {
+                ipcRenderer.removeListener("documents:changed", handler);
+            };
+        },
     },
 };
 
