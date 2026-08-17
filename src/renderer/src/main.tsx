@@ -4,6 +4,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { router } from "./router";
+import { useDocuments } from "./stores/documents";
 import { useOllama } from "./stores/ollama";
 import { useSettings } from "./stores/settings";
 
@@ -12,6 +13,7 @@ if (!root) throw new Error("root missing");
 
 void useSettings.getState().hydrate();
 void useOllama.getState().hydrate();
+void useDocuments.getState().hydrate();
 
 createRoot(root).render(
     <StrictMode>

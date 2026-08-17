@@ -1,4 +1,5 @@
 import type { ElectronAPI } from "@electron-toolkit/preload";
+import type { DocumentRow } from "../shared/document";
 import type { OllamaProgress } from "../shared/ollama";
 
 declare global {
@@ -38,6 +39,10 @@ declare global {
             };
             dialog: {
                 openDirectory: () => Promise<string | null>;
+            };
+            documents: {
+                list: () => Promise<DocumentRow[]>;
+                onChange: (cb: () => void) => () => void;
             };
         };
     }

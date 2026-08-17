@@ -1,5 +1,6 @@
 import chokidar, { type FSWatcher } from "chokidar";
 import { closeLibrary, openLibrary } from "./db";
+import { notifyDocumentsChanged } from "./documents";
 import { logger as rootLogger } from "./logger";
 import { clearSchedules, prune, remove, schedule } from "./track";
 
@@ -41,6 +42,7 @@ async function stop(root: string): Promise<void> {
     clearSchedules(root);
     closeLibrary(root);
     await w.close();
+    notifyDocumentsChanged();
     logger.info({ root }, "watch path removed");
 }
 
