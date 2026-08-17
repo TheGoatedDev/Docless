@@ -64,16 +64,14 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 
 - **File:** `.docless/docless.sqlite` (WAL; checkpoint on quit). Opened from main when a watch root starts (`src/main/db`).
 - **Owner:** Electron main only (`better-sqlite3`, hand migrates). Renderer never opens the file.
-- **Identity:** canonical relative path (NFC, `/`, preserve case) = primary key (enforced when track lands — TGD-97).
-- **Track:** allowlist (case-insensitive): `pdf`, `png`, `jpg`, `jpeg`, `webp`, `tif`, `tiff`, `heic`, `gif`. No symlink follow. (TGD-97)
+- **Identity:** canonical relative path (NFC, `/`, preserve case) = primary key (`src/main/track.ts`).
+- **Track:** allowlist (case-insensitive): `pdf`, `png`, `jpg`, `jpeg`, `webp`, `tif`, `tiff`, `heic`, `gif`. No symlink follow. Chokidar cold scan (`ignoreInitial: false`) + live add/change/unlink; prune missing rows on `ready`.
 - **documents columns:** `path`, `mtime_ms`, `size`, `content_hash`, `ocr_status`, `ocr_error`, `text`, `created_at_ms`, `updated_at_ms`.
 - **ocr_status:** `pending` \| `running` \| `done` \| `failed` \| `skipped`.
-- **Change detect:** mtime+size gate → SHA-256; hash change → `pending`, keep old `text` until new OCR succeeds. (TGD-97)
-- **Delete:** unlink → hard delete row. Rename = new path (re-OCR). (TGD-97)
+- **Change detect:** mtime+size gate → SHA-256; hash change → `pending`, keep old `text` until new OCR succeeds.
+- **Delete:** unlink → hard delete row. Rename = new path (re-OCR).
 - **Migrate:** forward-only `PRAGMA user_version` TS steps in transactions; backup `docless.sqlite.bak-v{k}` before each step (keep ~2); refuse DB newer than app + notify. Corrupt open → quarantine `docless.sqlite.corrupt-<ts>` + fresh DB + notify.
 - **Non-goals:** FTS, page table, rename-merge, multi-instance, global `userData` index.
-
-Watch events still log in main only until track/OCR stories land.
 
 ## IPC (`window.api`)
 
@@ -85,7 +83,7 @@ Watch events still log in main only until track/OCR stories land.
 
 ## Not built
 
-Initial walk + track upserts, OCR job queue, calling `glm-ocr`, FTS/search, tags, document viewer, watch→renderer IPC.
+OCR job queue, calling `glm-ocr`, FTS/search, tags, document viewer, watch→renderer IPC.
 
 ## Decisions
 
