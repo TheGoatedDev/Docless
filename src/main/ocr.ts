@@ -11,10 +11,12 @@ const logger = rootLogger.child({ mod: "ocr" });
 const IMAGE_EXT = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
 // ponytail: big scans crush glm-ocr; downscale before send
 const MAX_EDGE = 1280;
+// ponytail: fixed pool; bump if Ollama keeps up without thrash
+const CONCURRENCY = 2;
 
 type Claim = { root: string; path: string };
 
-let busy = false;
+let active = 0;
 let started = false;
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -207,35 +209,65 @@ async function runOne(job: Claim): Promise<void> {
     }
 }
 
-async function loop(): Promise<void> {
-    if (busy) return;
-    busy = true;
+/** Reserve a slot, claim one job, run it. Returns false when nothing to start. */
+async function tryStartOne(): Promise<boolean> {
+    if (active >= CONCURRENCY) return false;
+    active++;
     try {
-        for (;;) {
-            const st = await getOllamaStatus();
-            if (!st.running || !st.modelPresent) {
-                if (hasPending()) {
-                    logger.debug(
-                        { running: st.running, modelPresent: st.modelPresent },
-                        "ocr wait: ollama not ready",
-                    );
-                    scheduleKick(2000);
-                }
-                return;
+        const st = await getOllamaStatus();
+        if (!st.running || !st.modelPresent) {
+            if (hasPending()) {
+                logger.debug(
+                    { running: st.running, modelPresent: st.modelPresent },
+                    "ocr wait: ollama not ready",
+                );
+                scheduleKick(2000);
             }
-            const job = claimNext();
-            if (!job) return;
-            notifyDocumentsChanged();
-            await runOne(job);
+            active--;
+            return false;
         }
-    } finally {
-        busy = false;
+        const job = claimNext();
+        if (!job) {
+            active--;
+            return false;
+        }
+        notifyDocumentsChanged();
+        void runOne(job).finally(() => {
+            active--;
+            void fill();
+        });
+        return true;
+    } catch (e) {
+        active--;
+        throw e;
+    }
+}
+
+async function fill(): Promise<void> {
+    while (await tryStartOne()) {
+        /* fill pool */
     }
 }
 
 export function kickOcr(): void {
     if (!started) return;
-    void loop();
+    void fill();
+}
+
+/** failed → pending; no-op if not failed. */
+export function retryOcr(root: string, path: string): boolean {
+    const db = getLibrary(root);
+    if (!db) return false;
+    const r = db
+        .prepare(
+            `UPDATE documents SET ocr_status = 'pending', ocr_error = NULL, updated_at_ms = ?
+       WHERE path = ? AND ocr_status = 'failed'`,
+        )
+        .run(Date.now(), path);
+    if (!r.changes) return false;
+    notifyDocumentsChanged();
+    kickOcr();
+    return true;
 }
 
 export function startOcr(): void {

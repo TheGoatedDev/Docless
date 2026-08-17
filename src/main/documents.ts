@@ -1,6 +1,7 @@
 import { BrowserWindow, ipcMain } from "electron";
 import type { DocumentRow, OcrStatus } from "../shared/document";
 import { getLibrary, listLibraryRoots } from "./db";
+import { retryOcr } from "./ocr";
 
 const EMIT_MS = 200;
 let emitTimer: ReturnType<typeof setTimeout> | null = null;
@@ -17,15 +18,20 @@ export function listDocuments(): DocumentRow[] {
         if (!db) continue;
         const rows = db
             .prepare(
-                "SELECT path, ocr_status FROM documents ORDER BY path COLLATE NOCASE",
+                "SELECT path, ocr_status, ocr_error FROM documents ORDER BY path COLLATE NOCASE",
             )
-            .all() as { path: string; ocr_status: string }[];
+            .all() as {
+            path: string;
+            ocr_status: string;
+            ocr_error: string | null;
+        }[];
         for (const r of rows) {
             out.push({
                 root,
                 path: r.path,
                 name: nameOf(r.path),
                 ocrStatus: r.ocr_status as OcrStatus,
+                ocrError: r.ocr_error,
             });
         }
     }
@@ -44,4 +50,7 @@ export function notifyDocumentsChanged(): void {
 
 export function registerDocumentsIpc(): void {
     ipcMain.handle("documents:list", () => listDocuments());
+    ipcMain.handle("documents:retry", (_, p: { root: string; path: string }) =>
+        retryOcr(p.root, p.path),
+    );
 }

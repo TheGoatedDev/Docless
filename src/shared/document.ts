@@ -5,4 +5,5 @@ export type DocumentRow = {
     path: string;
     name: string;
     ocrStatus: OcrStatus;
+    ocrError: string | null;
 };

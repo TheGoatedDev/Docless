@@ -42,6 +42,7 @@ declare global {
             };
             documents: {
                 list: () => Promise<DocumentRow[]>;
+                retry: (p: { root: string; path: string }) => Promise<boolean>;
                 onChange: (cb: () => void) => () => void;
             };
         };
