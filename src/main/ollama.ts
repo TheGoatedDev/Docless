@@ -237,9 +237,8 @@ export async function ocrGenerate(imageB64: string): Promise<string> {
     }
     const data = (await res.json()) as { response?: string; error?: string };
     if (data.error) throw new Error(data.error);
-    const text = data.response?.trim() ?? "";
-    if (!text) throw new Error("OCR returned no text");
-    return text;
+    // ponytail: blank page / logo can yield empty — still done
+    return data.response?.trim() ?? "";
 }
 
 export async function reinstallOllama(): Promise<{ ok: true }> {

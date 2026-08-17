@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
-import { createCanvas } from "@napi-rs/canvas";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { getLibrary, listLibraryRoots } from "./db";
 import { notifyDocumentsChanged } from "./documents";
 import { logger as rootLogger } from "./logger";
@@ -9,11 +9,14 @@ import { getOllamaStatus, ocrGenerate } from "./ollama";
 const logger = rootLogger.child({ mod: "ocr" });
 
 const IMAGE_EXT = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
+// ponytail: big scans crush glm-ocr; downscale before send
+const MAX_EDGE = 1280;
 
 type Claim = { root: string; path: string };
 
 let busy = false;
 let started = false;
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
 function errMsg(e: unknown): string {
     if (e instanceof Error) {
@@ -49,25 +52,54 @@ function resetRunning(): void {
     }
 }
 
-function claimNext(): Claim | null {
+function hasPending(): boolean {
     for (const root of listLibraryRoots()) {
         const db = getLibrary(root);
         if (!db) continue;
         const row = db
             .prepare(
-                "SELECT path FROM documents WHERE ocr_status = 'pending' ORDER BY updated_at_ms LIMIT 1",
+                "SELECT 1 AS ok FROM documents WHERE ocr_status = 'pending' LIMIT 1",
             )
-            .get() as { path: string } | undefined;
-        if (!row) continue;
-        const now = Date.now();
-        const r = db
-            .prepare(
-                "UPDATE documents SET ocr_status = 'running', updated_at_ms = ? WHERE path = ? AND ocr_status = 'pending'",
-            )
-            .run(now, row.path);
-        if (r.changes) return { root, path: row.path };
+            .get() as { ok: number } | undefined;
+        if (row) return true;
     }
-    return null;
+    return false;
+}
+
+function scheduleKick(ms: number): void {
+    if (retryTimer) return;
+    retryTimer = setTimeout(() => {
+        retryTimer = null;
+        kickOcr();
+    }, ms);
+}
+
+/** Newest pending across all roots (just-dropped files first). */
+function claimNext(): Claim | null {
+    let best: { root: string; path: string; t: number } | null = null;
+    for (const root of listLibraryRoots()) {
+        const db = getLibrary(root);
+        if (!db) continue;
+        const row = db
+            .prepare(
+                "SELECT path, updated_at_ms FROM documents WHERE ocr_status = 'pending' ORDER BY updated_at_ms DESC LIMIT 1",
+            )
+            .get() as { path: string; updated_at_ms: number } | undefined;
+        if (row && (!best || row.updated_at_ms > best.t)) {
+            best = { root, path: row.path, t: row.updated_at_ms };
+        }
+    }
+    if (!best) return null;
+    const now = Date.now();
+    const db = getLibrary(best.root);
+    if (!db) return null;
+    const r = db
+        .prepare(
+            "UPDATE documents SET ocr_status = 'running', updated_at_ms = ? WHERE path = ? AND ocr_status = 'pending'",
+        )
+        .run(now, best.path);
+    if (!r.changes) return null;
+    return { root: best.root, path: best.path };
 }
 
 function finish(
@@ -94,6 +126,21 @@ function finish(
     notifyDocumentsChanged();
 }
 
+async function encodeBufForOcr(buf: Buffer): Promise<string> {
+    const img = await loadImage(buf);
+    let w = img.width;
+    let h = img.height;
+    const max = Math.max(w, h);
+    if (max > MAX_EDGE) {
+        const s = MAX_EDGE / max;
+        w = Math.max(1, Math.round(w * s));
+        h = Math.max(1, Math.round(h * s));
+    }
+    const canvas = createCanvas(w, h);
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+    return canvas.toBuffer("image/jpeg", 85).toString("base64");
+}
+
 async function pdfPagesB64(abs: string): Promise<string[]> {
     // ponytail: dynamic import — pdfjs is ESM; CJS require of .mjs breaks in Electron
     const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
@@ -102,7 +149,9 @@ async function pdfPagesB64(abs: string): Promise<string[]> {
     const out: string[] = [];
     for (let i = 1; i <= doc.numPages; i++) {
         const page = await doc.getPage(i);
-        const viewport = page.getViewport({ scale: 2 });
+        const base = page.getViewport({ scale: 1 });
+        const scale = Math.min(2, MAX_EDGE / Math.max(base.width, base.height));
+        const viewport = page.getViewport({ scale });
         const canvas = createCanvas(
             Math.ceil(viewport.width),
             Math.ceil(viewport.height),
@@ -113,14 +162,14 @@ async function pdfPagesB64(abs: string): Promise<string[]> {
             viewport,
             canvas: canvas as unknown as HTMLCanvasElement,
         }).promise;
-        out.push(canvas.toBuffer("image/png").toString("base64"));
+        out.push(await encodeBufForOcr(canvas.toBuffer("image/png")));
     }
     return out;
 }
 
 async function imagesFor(abs: string, ext: string): Promise<string[]> {
     if (IMAGE_EXT.has(ext)) {
-        return [(await readFile(abs)).toString("base64")];
+        return [await encodeBufForOcr(await readFile(abs))];
     }
     if (ext === "pdf") return pdfPagesB64(abs);
     throw new Error(`OCR supports images and PDF only (not .${ext})`);
@@ -129,6 +178,7 @@ async function imagesFor(abs: string, ext: string): Promise<string[]> {
 async function runOne(job: Claim): Promise<void> {
     const abs = join(job.root, job.path);
     const ext = extname(job.path).slice(1).toLowerCase();
+    logger.info({ root: job.root, path: job.path }, "ocr start");
     try {
         const images = await imagesFor(abs, ext);
         const parts: string[] = [];
@@ -146,7 +196,10 @@ async function runOne(job: Claim): Promise<void> {
             }
         }
         finish(job.root, job.path, true, parts.join("\n\n"), null);
-        logger.info({ root: job.root, path: job.path }, "ocr done");
+        logger.info(
+            { root: job.root, path: job.path, pages: parts.length },
+            "ocr done",
+        );
     } catch (e) {
         const msg = errMsg(e);
         finish(job.root, job.path, false, null, msg);
@@ -160,7 +213,16 @@ async function loop(): Promise<void> {
     try {
         for (;;) {
             const st = await getOllamaStatus();
-            if (!st.running || !st.modelPresent) return;
+            if (!st.running || !st.modelPresent) {
+                if (hasPending()) {
+                    logger.debug(
+                        { running: st.running, modelPresent: st.modelPresent },
+                        "ocr wait: ollama not ready",
+                    );
+                    scheduleKick(2000);
+                }
+                return;
+            }
             const job = claimNext();
             if (!job) return;
             notifyDocumentsChanged();
