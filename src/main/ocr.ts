@@ -11,8 +11,8 @@ const logger = rootLogger.child({ mod: "ocr" });
 const IMAGE_EXT = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
 // ponytail: big scans crush glm-ocr; downscale before send
 const MAX_EDGE = 1280;
-// ponytail: fixed pool; bump if Ollama keeps up without thrash
-const CONCURRENCY = 2;
+// ponytail: Ollama/glm-ocr bound; 4 ok on 12c/64GB, drop if thrash/OOM
+const CONCURRENCY = 4;
 
 type Claim = { root: string; path: string };
 
