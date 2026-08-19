@@ -26,6 +26,7 @@ function AppLayout(): React.JSX.Element {
     const query = useDocuments((s) => s.query);
     const setQuery = useDocuments((s) => s.setQuery);
     const runningOcr = useDocuments((s) => s.runningOcr);
+    const pendingOcr = useDocuments((s) => s.pendingOcr);
     const mac = window.electron.process.platform === "darwin";
     const chrome = window.api.windowRole !== "compact";
     const ollama = error
@@ -72,6 +73,22 @@ function AppLayout(): React.JSX.Element {
                             />
                         </div>
                         <div className="app-no-drag ml-auto flex items-center gap-2">
+                            {pendingOcr > 0 ? (
+                                <Tooltip>
+                                    <Badge
+                                        variant="outline"
+                                        render={<TooltipTrigger />}
+                                    >
+                                        <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+                                        Pending {pendingOcr}
+                                    </Badge>
+                                    <TooltipContent>
+                                        {pendingOcr} document
+                                        {pendingOcr === 1 ? "" : "s"} waiting
+                                        for OCR
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
                             <Tooltip>
                                 <Badge
                                     variant="outline"
