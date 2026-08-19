@@ -1,6 +1,10 @@
 import { join, resolve, sep } from "node:path";
 import { BrowserWindow, ipcMain, shell } from "electron";
-import type { DocumentRow, OcrStatus } from "../shared/document";
+import type {
+    DocumentDetail,
+    DocumentRow,
+    OcrStatus,
+} from "../shared/document";
 import { getLibrary, listLibraryRoots } from "./db";
 import { retryOcr } from "./ocr";
 
@@ -23,6 +27,20 @@ function rowOf(
         ocrStatus: r.ocr_status as OcrStatus,
         ocrError: r.ocr_error,
     };
+}
+
+/** Safe relative path under an open watch root, or null. */
+function safeRelPath(root: string, path: string): string | null {
+    if (!listLibraryRoots().includes(root)) return null;
+    if (!path || path.startsWith("/") || path.includes("\0")) return null;
+    const parts = path.split("/");
+    if (parts.some((p) => p === ".." || p === "")) return null;
+    const abs = resolve(join(root, ...parts));
+    const rootResolved = resolve(root);
+    if (abs !== rootResolved && !abs.startsWith(rootResolved + sep)) {
+        return null;
+    }
+    return path;
 }
 
 export function listDocuments(): DocumentRow[] {
@@ -85,21 +103,34 @@ export function searchDocuments(q: string): DocumentRow[] {
     return out;
 }
 
+export function getDocument(root: string, path: string): DocumentDetail | null {
+    const rel = safeRelPath(root, path);
+    if (!rel) return null;
+    const db = getLibrary(root);
+    if (!db) return null;
+    const r = db
+        .prepare(
+            "SELECT path, ocr_status, ocr_error, text FROM documents WHERE path = ?",
+        )
+        .get(rel) as
+        | {
+              path: string;
+              ocr_status: string;
+              ocr_error: string | null;
+              text: string | null;
+          }
+        | undefined;
+    if (!r) return null;
+    return { ...rowOf(root, r), text: r.text };
+}
+
 export async function openDocument(
     root: string,
     path: string,
 ): Promise<boolean> {
-    if (!listLibraryRoots().includes(root)) return false;
-    if (!path || path.startsWith("/") || path.includes("\0")) return false;
-    const parts = path.split("/");
-    if (parts.some((p) => p === ".." || p === "")) return false;
-
-    const abs = resolve(join(root, ...parts));
-    const rootResolved = resolve(root);
-    if (abs !== rootResolved && !abs.startsWith(rootResolved + sep)) {
-        return false;
-    }
-
+    const rel = safeRelPath(root, path);
+    if (!rel) return false;
+    const abs = resolve(join(root, ...rel.split("/")));
     const err = await shell.openPath(abs);
     return err === "";
 }
@@ -118,6 +149,9 @@ export function registerDocumentsIpc(): void {
     ipcMain.handle("documents:list", () => listDocuments());
     ipcMain.handle("documents:search", (_, q: string) =>
         searchDocuments(typeof q === "string" ? q : ""),
+    );
+    ipcMain.handle("documents:get", (_, p: { root: string; path: string }) =>
+        getDocument(p?.root ?? "", p?.path ?? ""),
     );
     ipcMain.handle("documents:open", (_, p: { root: string; path: string }) =>
         openDocument(p?.root ?? "", p?.path ?? ""),

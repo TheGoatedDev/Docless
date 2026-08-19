@@ -1,5 +1,5 @@
 import type { ElectronAPI } from "@electron-toolkit/preload";
-import type { DocumentRow } from "../shared/document";
+import type { DocumentDetail, DocumentRow } from "../shared/document";
 import type { OllamaProgress } from "../shared/ollama";
 
 declare global {
@@ -43,6 +43,10 @@ declare global {
             documents: {
                 list: () => Promise<DocumentRow[]>;
                 search: (q: string) => Promise<DocumentRow[]>;
+                get: (p: {
+                    root: string;
+                    path: string;
+                }) => Promise<DocumentDetail | null>;
                 open: (p: { root: string; path: string }) => Promise<boolean>;
                 retry: (p: { root: string; path: string }) => Promise<boolean>;
                 onChange: (cb: () => void) => () => void;
