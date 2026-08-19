@@ -1,6 +1,6 @@
 # Architecture
 
-As-built map of Docless. Search / viewer are not built yet — see Status in the README and ADRs 0006–0008.
+As-built map of Docless. Document viewer is not built yet — see Status in the README and ADRs 0006–0008.
 
 ## Purpose
 
@@ -75,7 +75,8 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 - **OCR:** main pool (`src/main/ocr.ts`, concurrency 2) claims `pending` → `running`, calls local `glm-ocr` via Ollama `/api/generate` only (`127.0.0.1`), writes `text` + `done` or `ocr_error` + `failed`. Images (png/jpg/jpeg/webp/gif) as-is; PDF every page rasterized (`pdfjs-dist` + `@napi-rs/canvas`) then OCR’d and joined with `\n\n`. heic/tif/tiff → failed with clear error. Kick on track pending + model ready; refill when a job finishes. Stale `running` reset to `pending` on boot. No claim while Ollama/model down (stays pending). Manual retry: `failed` → `pending` via `documents.retry` (UI Retry on failed rows).
 - **Delete:** unlink → hard delete row. Rename = new path (re-OCR).
 - **Migrate:** forward-only `PRAGMA user_version` TS steps in transactions; backup `docless.sqlite.bak-v{k}` before each step (keep ~2); refuse DB newer than app + notify. Corrupt open → quarantine `docless.sqlite.corrupt-<ts>` + fresh DB + notify.
-- **Non-goals:** FTS, page table, rename-merge, multi-instance, global `userData` index.
+- **FTS (schema v2):** external-content `documents_fts` (FTS5 on `path` + `text`) kept in sync via AI/AD/AU triggers; backfill on migrate. Search unions open roots with `MATCH` (token prefix) + `bm25` order — local only, no remote index.
+- **Non-goals:** page table, rename-merge, multi-instance, global `userData` index.
 
 ## IPC (`window.api`)
 
@@ -83,13 +84,15 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 - `dialog.openDirectory` → `string | null`
 - `ollama.ensureRuntime` / `ensureModel` / `reinstall` / `status` / `onProgress`
 - `documents.list` / `onChange` → union of open sidecars (name, root, path, ocrStatus, ocrError); push on track/watch/OCR changes
+- `documents.search(q)` → FTS over path + OCR text across open sidecars (empty q = list)
+- `documents.open({ root, path })` → open file in OS default app (`shell.openPath`)
 - `documents.retry({ root, path })` → `boolean` (`failed` → `pending` + kick)
 - `notify.show`
 - `windowRole`: `"main"` \| `"compact"`
 
 ## Not built
 
-FTS/search, tags, document viewer.
+Tags, document viewer.
 
 ## Decisions
 

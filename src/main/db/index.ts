@@ -14,7 +14,7 @@ import { notifyMain } from "../notify";
 
 const logger = rootLogger.child({ mod: "db" });
 
-export const APP_SCHEMA_VERSION = 1;
+export const APP_SCHEMA_VERSION = 2;
 
 const pools = new Map<string, Database.Database>();
 
@@ -35,6 +35,33 @@ const steps: Step[] = [
         created_at_ms INTEGER NOT NULL,
         updated_at_ms INTEGER NOT NULL
       );
+    `);
+    },
+    // v1 → v2: FTS5 over path + OCR text
+    (db) => {
+        db.exec(`
+      CREATE VIRTUAL TABLE documents_fts USING fts5(
+        path,
+        text,
+        content='documents',
+        content_rowid='rowid'
+      );
+      CREATE TRIGGER documents_ai AFTER INSERT ON documents BEGIN
+        INSERT INTO documents_fts(rowid, path, text)
+        VALUES (new.rowid, new.path, ifnull(new.text, ''));
+      END;
+      CREATE TRIGGER documents_ad AFTER DELETE ON documents BEGIN
+        INSERT INTO documents_fts(documents_fts, rowid, path, text)
+        VALUES ('delete', old.rowid, old.path, ifnull(old.text, ''));
+      END;
+      CREATE TRIGGER documents_au AFTER UPDATE ON documents BEGIN
+        INSERT INTO documents_fts(documents_fts, rowid, path, text)
+        VALUES ('delete', old.rowid, old.path, ifnull(old.text, ''));
+        INSERT INTO documents_fts(rowid, path, text)
+        VALUES (new.rowid, new.path, ifnull(new.text, ''));
+      END;
+      INSERT INTO documents_fts(rowid, path, text)
+        SELECT rowid, path, ifnull(text, '') FROM documents;
     `);
     },
 ];
