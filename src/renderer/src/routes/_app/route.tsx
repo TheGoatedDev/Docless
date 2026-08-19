@@ -49,10 +49,10 @@ function AppLayout(): React.JSX.Element {
 
     return (
         <TooltipProvider>
-            <SidebarProvider>
-                <div className="flex h-svh w-full flex-col">
+            <SidebarProvider className="h-svh min-h-0 overflow-hidden">
+                <div className="flex h-full w-full flex-col overflow-hidden">
                     <header
-                        className={`app-drag sticky top-0 z-20 flex h-11 shrink-0 items-center gap-2 border-b bg-background px-4 ${chrome ? (mac ? "pl-24" : "pr-28") : ""}`}
+                        className={`app-drag z-20 flex h-11 shrink-0 items-center gap-2 border-b bg-background px-4 ${chrome ? (mac ? "pl-24" : "pr-28") : ""}`}
                     >
                         <SidebarTrigger className="app-no-drag md:hidden" />
                         {chrome ? (
@@ -88,9 +88,9 @@ function AppLayout(): React.JSX.Element {
                             <TooltipContent>{ollama.tip}</TooltipContent>
                         </Tooltip>
                     </header>
-                    <div className="flex min-h-0 flex-1">
+                    <div className="flex min-h-0 flex-1 overflow-hidden">
                         <AppSidebar />
-                        <SidebarInset>
+                        <SidebarInset className="min-h-0 overflow-auto">
                             <main className="mx-auto w-full max-w-4xl flex-1 p-6">
                                 <Outlet />
                             </main>
