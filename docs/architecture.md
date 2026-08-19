@@ -1,6 +1,6 @@
 # Architecture
 
-As-built map of Docless. Document viewer is not built yet — see Status in the README and ADRs 0006–0008.
+As-built map of Docless. See ADRs 0006–0008 for storage/watch/OCR.
 
 ## Purpose
 
@@ -85,14 +85,16 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 - `ollama.ensureRuntime` / `ensureModel` / `reinstall` / `status` / `onProgress`
 - `documents.list` / `onChange` → union of open sidecars (name, root, path, ocrStatus, ocrError); push on track/watch/OCR changes
 - `documents.search(q)` → FTS over path + OCR text across open sidecars (empty q = list)
+- `documents.get({ root, path })` → one row + OCR `text`, or null
 - `documents.open({ root, path })` → open file in OS default app (`shell.openPath`)
 - `documents.retry({ root, path })` → `boolean` (`failed` → `pending` + kick)
+- UI: `/doc?root=&path=` detail (source context + OCR text); list/search rows navigate there
 - `notify.show`
 - `windowRole`: `"main"` \| `"compact"`
 
 ## Not built
 
-Tags, document viewer.
+Tags.
 
 ## Decisions
 

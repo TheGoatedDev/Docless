@@ -7,3 +7,7 @@ export type DocumentRow = {
     ocrStatus: OcrStatus;
     ocrError: string | null;
 };
+
+export type DocumentDetail = DocumentRow & {
+    text: string | null;
+};

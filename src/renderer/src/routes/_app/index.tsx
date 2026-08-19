@@ -48,15 +48,10 @@ function Home(): React.JSX.Element {
                             key={`${d.root}\0${d.path}`}
                             className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm"
                         >
-                            <button
-                                type="button"
+                            <Link
+                                to="/doc"
+                                search={{ root: d.root, path: d.path }}
                                 className="hover:bg-muted/50 -mx-1 min-w-0 flex-1 rounded px-1 py-0.5 text-left"
-                                onClick={() => {
-                                    void window.api.documents.open({
-                                        root: d.root,
-                                        path: d.path,
-                                    });
-                                }}
                             >
                                 <div className="truncate font-medium">
                                     {d.name}
@@ -69,7 +64,7 @@ function Home(): React.JSX.Element {
                                         {d.ocrError}
                                     </div>
                                 ) : null}
-                            </button>
+                            </Link>
                             <Badge variant="secondary">{d.ocrStatus}</Badge>
                             {d.ocrStatus === "failed" ? (
                                 <Button

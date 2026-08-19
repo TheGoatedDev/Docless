@@ -1,6 +1,6 @@
 import { electronAPI } from "@electron-toolkit/preload";
 import { contextBridge, ipcRenderer } from "electron";
-import type { DocumentRow } from "../shared/document";
+import type { DocumentDetail, DocumentRow } from "../shared/document";
 import type { OllamaProgress } from "../shared/ollama";
 
 const windowRole = process.argv.some((a) => a === "--docless-window=compact")
@@ -63,6 +63,11 @@ const api = {
             ipcRenderer.invoke("documents:list"),
         search: (q: string): Promise<DocumentRow[]> =>
             ipcRenderer.invoke("documents:search", q),
+        get: (p: {
+            root: string;
+            path: string;
+        }): Promise<DocumentDetail | null> =>
+            ipcRenderer.invoke("documents:get", p),
         open: (p: { root: string; path: string }): Promise<boolean> =>
             ipcRenderer.invoke("documents:open", p),
         retry: (p: { root: string; path: string }): Promise<boolean> =>

@@ -13,6 +13,7 @@ import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as SetupRouteRouteImport } from './routes/setup/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppDevRouteImport } from './routes/_app/dev'
+import { Route as AppDocRouteImport } from './routes/_app/doc'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppStatusRouteImport } from './routes/_app/status'
 import { Route as SetupIndexRouteImport } from './routes/setup/index'
@@ -36,6 +37,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppDevRoute = AppDevRouteImport.update({
   id: '/dev',
   path: '/dev',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppDocRoute = AppDocRouteImport.update({
+  id: '/doc',
+  path: '/doc',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/setup': typeof SetupRouteRouteWithChildren
   '/dev': typeof AppDevRoute
+  '/doc': typeof AppDocRoute
   '/settings': typeof AppSettingsRoute
   '/status': typeof AppStatusRoute
   '/setup/1-ollama': typeof Setup1OllamaRoute
@@ -76,6 +83,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/dev': typeof AppDevRoute
+  '/doc': typeof AppDocRoute
   '/settings': typeof AppSettingsRoute
   '/status': typeof AppStatusRoute
   '/setup/1-ollama': typeof Setup1OllamaRoute
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteRouteWithChildren
   '/setup': typeof SetupRouteRouteWithChildren
   '/_app/dev': typeof AppDevRoute
+  '/_app/doc': typeof AppDocRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/status': typeof AppStatusRoute
   '/setup/1-ollama': typeof Setup1OllamaRoute
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/'
     | '/setup'
     | '/dev'
+    | '/doc'
     | '/settings'
     | '/status'
     | '/setup/1-ollama'
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/dev'
+    | '/doc'
     | '/settings'
     | '/status'
     | '/setup/1-ollama'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/setup'
     | '/_app/dev'
+    | '/_app/doc'
     | '/_app/settings'
     | '/_app/status'
     | '/setup/1-ollama'
@@ -163,6 +175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDevRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/doc': {
+      id: '/_app/doc'
+      path: '/doc'
+      fullPath: '/doc'
+      preLoaderRoute: typeof AppDocRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -203,6 +222,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteRouteChildren {
   AppDevRoute: typeof AppDevRoute
+  AppDocRoute: typeof AppDocRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStatusRoute: typeof AppStatusRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -210,6 +230,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppDevRoute: AppDevRoute,
+  AppDocRoute: AppDocRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStatusRoute: AppStatusRoute,
   AppIndexRoute: AppIndexRoute,
