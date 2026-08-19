@@ -61,6 +61,10 @@ const api = {
     documents: {
         list: (): Promise<DocumentRow[]> =>
             ipcRenderer.invoke("documents:list"),
+        search: (q: string): Promise<DocumentRow[]> =>
+            ipcRenderer.invoke("documents:search", q),
+        open: (p: { root: string; path: string }): Promise<boolean> =>
+            ipcRenderer.invoke("documents:open", p),
         retry: (p: { root: string; path: string }): Promise<boolean> =>
             ipcRenderer.invoke("documents:retry", p),
         onChange: (cb: () => void): (() => void) => {

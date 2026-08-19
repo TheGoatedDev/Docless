@@ -42,6 +42,8 @@ declare global {
             };
             documents: {
                 list: () => Promise<DocumentRow[]>;
+                search: (q: string) => Promise<DocumentRow[]>;
+                open: (p: { root: string; path: string }) => Promise<boolean>;
                 retry: (p: { root: string; path: string }) => Promise<boolean>;
                 onChange: (cb: () => void) => () => void;
             };

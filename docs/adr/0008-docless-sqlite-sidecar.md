@@ -9,5 +9,6 @@ Each watched root keeps library state in `.docless/docless.sqlite` (OCR text inc
 **Consequences:**
 - One DB per root; app unions at query time — no global mirror.
 - Schema evolves with forward-only migrates (`PRAGMA user_version`), backup before each step, refuse DBs newer than the app.
-- FTS, page rows, rename-merge, multi-instance locking are non-goals of this decision (later ADRs/stories).
+- Page rows, rename-merge, multi-instance locking are non-goals of this decision (later ADRs/stories).
+- FTS5 landed later (schema v2 / TGD-101): external-content `documents_fts` + triggers; search still unions per-root DBs at query time.
 - Layout detail: TGD-96 / architecture storage section.

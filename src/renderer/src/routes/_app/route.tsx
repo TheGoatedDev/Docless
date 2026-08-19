@@ -12,6 +12,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@renderer/components/ui/tooltip";
+import { useDocuments } from "@renderer/stores/documents";
 import { useOllama } from "@renderer/stores/ollama";
 import { IconSearch } from "@tabler/icons-react";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
@@ -22,6 +23,8 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout(): React.JSX.Element {
     const { ready, busy, error, message, status } = useOllama();
+    const query = useDocuments((s) => s.query);
+    const setQuery = useDocuments((s) => s.setQuery);
     const mac = window.electron.process.platform === "darwin";
     const chrome = window.api.windowRole !== "compact";
     const ollama = error
@@ -63,6 +66,8 @@ function AppLayout(): React.JSX.Element {
                                 type="search"
                                 placeholder="Search…"
                                 className="h-8 pl-8"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
                             />
                         </div>
                         <Tooltip>
