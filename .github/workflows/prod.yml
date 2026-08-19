@@ -3,17 +3,23 @@ name: prod
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (e.g. v1.2.0)
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: prod-${{ github.event.release.tag_name }}
+  group: prod-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
   cancel-in-progress: false
 
 jobs:
   meta:
-    if: ${{ !github.event.release.prerelease }}
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.meta.outputs.version }}
@@ -23,7 +29,7 @@ jobs:
 
       - id: meta
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
         run: |
           set -euo pipefail
           {
