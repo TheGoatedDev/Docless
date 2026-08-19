@@ -25,6 +25,7 @@ function AppLayout(): React.JSX.Element {
     const { ready, busy, error, message, status } = useOllama();
     const query = useDocuments((s) => s.query);
     const setQuery = useDocuments((s) => s.setQuery);
+    const runningOcr = useDocuments((s) => s.runningOcr);
     const mac = window.electron.process.platform === "darwin";
     const chrome = window.api.windowRole !== "compact";
     const ollama = error
@@ -70,23 +71,40 @@ function AppLayout(): React.JSX.Element {
                                 onChange={(e) => setQuery(e.target.value)}
                             />
                         </div>
-                        <Tooltip>
-                            <Badge
-                                className="app-no-drag ml-auto"
-                                variant="outline"
-                                render={
-                                    <TooltipTrigger
-                                        render={<Link to="/status" />}
+                        <div className="app-no-drag ml-auto flex items-center gap-2">
+                            <Tooltip>
+                                <Badge
+                                    variant="outline"
+                                    render={<TooltipTrigger />}
+                                >
+                                    <span
+                                        className={`size-1.5 rounded-full ${runningOcr > 0 ? "bg-amber-500" : "bg-muted-foreground/40"}`}
                                     />
-                                }
-                            >
-                                <span
-                                    className={`size-1.5 rounded-full ${ollama.dot}`}
-                                />
-                                {ollama.label}
-                            </Badge>
-                            <TooltipContent>{ollama.tip}</TooltipContent>
-                        </Tooltip>
+                                    OCR {runningOcr}
+                                </Badge>
+                                <TooltipContent>
+                                    {runningOcr > 0
+                                        ? `${runningOcr} OCR job${runningOcr === 1 ? "" : "s"} running`
+                                        : "No OCR jobs running"}
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <Badge
+                                    variant="outline"
+                                    render={
+                                        <TooltipTrigger
+                                            render={<Link to="/status" />}
+                                        />
+                                    }
+                                >
+                                    <span
+                                        className={`size-1.5 rounded-full ${ollama.dot}`}
+                                    />
+                                    {ollama.label}
+                                </Badge>
+                                <TooltipContent>{ollama.tip}</TooltipContent>
+                            </Tooltip>
+                        </div>
                     </header>
                     <div className="flex min-h-0 flex-1 overflow-hidden">
                         <AppSidebar />
