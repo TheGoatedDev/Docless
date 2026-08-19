@@ -52,7 +52,7 @@ function AppLayout(): React.JSX.Element {
             <SidebarProvider>
                 <div className="flex h-svh w-full flex-col">
                     <header
-                        className={`app-drag relative z-20 flex h-11 shrink-0 items-center gap-2 border-b px-4 ${chrome ? (mac ? "pl-24" : "pr-28") : ""}`}
+                        className={`app-drag sticky top-0 z-20 flex h-11 shrink-0 items-center gap-2 border-b bg-background px-4 ${chrome ? (mac ? "pl-24" : "pr-28") : ""}`}
                     >
                         <SidebarTrigger className="app-no-drag md:hidden" />
                         {chrome ? (
