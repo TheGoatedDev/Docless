@@ -13,12 +13,28 @@ const IMAGE_EXT = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
 const MAX_EDGE = 1280;
 // ponytail: fixed pool; bump if Ollama keeps up without thrash
 const CONCURRENCY = 2;
+const MAX_ATTEMPTS = 3;
+const BACKOFF_MS = [5_000, 15_000] as const;
 
 type Claim = { root: string; path: string };
 
 let active = 0;
 let started = false;
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
+// ponytail: in-memory attempts, lost on quit — leftover failed stay failed until Retry / Retry All
+const attempts = new Map<string, number>();
+
+function jobKey(root: string, path: string): string {
+    return `${root}\0${path}`;
+}
+
+function isTransient(msg: string): boolean {
+    return msg.includes("OCR timed out") || msg.includes("Ollama unavailable");
+}
+
+export function clearOcrAttempts(root: string, path: string): void {
+    attempts.delete(jobKey(root, path));
+}
 
 function errMsg(e: unknown): string {
     if (e instanceof Error) {
@@ -115,6 +131,7 @@ function finish(
     if (!db) return;
     const now = Date.now();
     if (ok) {
+        attempts.delete(jobKey(root, path));
         db.prepare(
             `UPDATE documents SET ocr_status = 'done', text = ?, ocr_error = NULL, updated_at_ms = ?
        WHERE path = ? AND ocr_status = 'running'`,
@@ -204,8 +221,21 @@ async function runOne(job: Claim): Promise<void> {
         );
     } catch (e) {
         const msg = errMsg(e);
+        const k = jobKey(job.root, job.path);
+        const n = (attempts.get(k) ?? 0) + 1;
+        attempts.set(k, n);
         finish(job.root, job.path, false, null, msg);
-        logger.warn({ root: job.root, path: job.path, err: msg }, "ocr failed");
+        logger.warn(
+            { root: job.root, path: job.path, err: msg, n },
+            "ocr failed",
+        );
+        if (isTransient(msg) && n < MAX_ATTEMPTS) {
+            const delay =
+                BACKOFF_MS[n - 1] ?? BACKOFF_MS[BACKOFF_MS.length - 1];
+            setTimeout(() => {
+                requeueFailed(job.root, job.path);
+            }, delay);
+        }
     }
 }
 
@@ -254,8 +284,7 @@ export function kickOcr(): void {
     void fill();
 }
 
-/** failed → pending; no-op if not failed. */
-export function retryOcr(root: string, path: string): boolean {
+function requeueFailed(root: string, path: string): boolean {
     const db = getLibrary(root);
     if (!db) return false;
     const r = db
@@ -268,6 +297,33 @@ export function retryOcr(root: string, path: string): boolean {
     notifyDocumentsChanged();
     kickOcr();
     return true;
+}
+
+/** failed → pending; no-op if not failed. */
+export function retryOcr(root: string, path: string): boolean {
+    clearOcrAttempts(root, path);
+    return requeueFailed(root, path);
+}
+
+export function retryAllFailed(): number {
+    attempts.clear();
+    let n = 0;
+    const now = Date.now();
+    for (const root of listLibraryRoots()) {
+        const db = getLibrary(root);
+        if (!db) continue;
+        n += db
+            .prepare(
+                `UPDATE documents SET ocr_status = 'pending', ocr_error = NULL, updated_at_ms = ?
+         WHERE ocr_status = 'failed'`,
+            )
+            .run(now).changes;
+    }
+    if (n) {
+        notifyDocumentsChanged();
+        kickOcr();
+    }
+    return n;
 }
 
 export function startOcr(): void {

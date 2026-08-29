@@ -4,7 +4,7 @@ import { extname, join, relative, sep } from "node:path";
 import { getLibrary } from "./db";
 import { notifyDocumentsChanged } from "./documents";
 import { logger as rootLogger } from "./logger";
-import { kickOcr } from "./ocr";
+import { clearOcrAttempts, kickOcr } from "./ocr";
 
 const logger = rootLogger.child({ mod: "track" });
 
@@ -115,6 +115,7 @@ export async function upsert(root: string, abs: string): Promise<void> {
        ocr_status = 'pending', ocr_error = NULL, updated_at_ms = ?
        WHERE path = ?`,
     ).run(mtime_ms, size, content_hash, now, path);
+    clearOcrAttempts(root, path);
     logger.info({ root, path }, "document changed");
     notifyDocumentsChanged();
     kickOcr();
@@ -127,6 +128,7 @@ export function remove(root: string, abs: string): void {
     if (!path || path.startsWith("..")) return;
     const r = db.prepare("DELETE FROM documents WHERE path = ?").run(path);
     if (r.changes) {
+        clearOcrAttempts(root, path);
         logger.info({ root, path }, "document removed");
         notifyDocumentsChanged();
     }

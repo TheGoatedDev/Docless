@@ -49,6 +49,7 @@ declare global {
                 }) => Promise<DocumentDetail | null>;
                 open: (p: { root: string; path: string }) => Promise<boolean>;
                 retry: (p: { root: string; path: string }) => Promise<boolean>;
+                retryAll: () => Promise<number>;
                 onChange: (cb: () => void) => () => void;
             };
         };

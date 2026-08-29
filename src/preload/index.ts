@@ -72,6 +72,8 @@ const api = {
             ipcRenderer.invoke("documents:open", p),
         retry: (p: { root: string; path: string }): Promise<boolean> =>
             ipcRenderer.invoke("documents:retry", p),
+        retryAll: (): Promise<number> =>
+            ipcRenderer.invoke("documents:retryAll"),
         onChange: (cb: () => void): (() => void) => {
             const handler = (): void => cb();
             ipcRenderer.on("documents:changed", handler);

@@ -6,7 +6,7 @@ import type {
     OcrStatus,
 } from "../shared/document";
 import { getLibrary, listLibraryRoots } from "./db";
-import { retryOcr } from "./ocr";
+import { retryAllFailed, retryOcr } from "./ocr";
 
 const EMIT_MS = 200;
 let emitTimer: ReturnType<typeof setTimeout> | null = null;
@@ -159,4 +159,5 @@ export function registerDocumentsIpc(): void {
     ipcMain.handle("documents:retry", (_, p: { root: string; path: string }) =>
         retryOcr(p.root, p.path),
     );
+    ipcMain.handle("documents:retryAll", () => retryAllFailed());
 }

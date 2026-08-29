@@ -1,5 +1,6 @@
 import { Badge } from "@renderer/components/ui/badge";
 import { Button } from "@renderer/components/ui/button";
+import { notify } from "@renderer/lib/notify";
 import { useDocuments } from "@renderer/stores/documents";
 import { useSettings } from "@renderer/stores/settings";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -11,17 +12,39 @@ export const Route = createFileRoute("/_app/")({
 function Home(): React.JSX.Element {
     const docs = useDocuments((s) => s.docs);
     const query = useDocuments((s) => s.query);
+    const failedOcr = useDocuments((s) => s.failedOcr);
     const paths = useSettings((s) => s.settings.watchPaths);
     const q = query.trim();
     const searching = q.length > 0;
 
     return (
         <div className="flex flex-col gap-4">
-            <div>
-                <h1 className="font-heading text-xl font-medium">Documents</h1>
-                <p className="text-muted-foreground mt-1 text-sm">
-                    Files discovered in watched folders.
-                </p>
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <h1 className="font-heading text-xl font-medium">
+                        Documents
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                        Files discovered in watched folders.
+                    </p>
+                </div>
+                {failedOcr > 0 ? (
+                    <Button
+                        size="xs"
+                        variant="outline"
+                        onClick={() => {
+                            void window.api.documents.retryAll().then((n) => {
+                                if (n) {
+                                    notify({
+                                        title: `Retrying ${n} failed job${n === 1 ? "" : "s"}`,
+                                    });
+                                }
+                            });
+                        }}
+                    >
+                        Retry all failed ({failedOcr})
+                    </Button>
+                ) : null}
             </div>
 
             {paths.length === 0 ? (

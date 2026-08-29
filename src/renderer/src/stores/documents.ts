@@ -10,6 +10,7 @@ type State = {
     query: string;
     runningOcr: number;
     pendingOcr: number;
+    failedOcr: number;
     setQuery: (q: string) => void;
     hydrate: () => Promise<void>;
 };
@@ -18,19 +19,24 @@ let listening = false;
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 let searchGen = 0;
 
-async function load(
-    query: string,
-): Promise<{ docs: DocumentRow[]; runningOcr: number; pendingOcr: number }> {
+async function load(query: string): Promise<{
+    docs: DocumentRow[];
+    runningOcr: number;
+    pendingOcr: number;
+    failedOcr: number;
+}> {
     const all = await window.api.documents.list();
     let runningOcr = 0;
     let pendingOcr = 0;
+    let failedOcr = 0;
     for (const d of all) {
         if (d.ocrStatus === "running") runningOcr++;
         else if (d.ocrStatus === "pending") pendingOcr++;
+        else if (d.ocrStatus === "failed") failedOcr++;
     }
     const q = query.trim();
     const docs = q ? await window.api.documents.search(q) : all;
-    return { docs, runningOcr, pendingOcr };
+    return { docs, runningOcr, pendingOcr, failedOcr };
 }
 
 export const useDocuments = create<State>((set, get) => ({
@@ -38,6 +44,7 @@ export const useDocuments = create<State>((set, get) => ({
     query: "",
     runningOcr: 0,
     pendingOcr: 0,
+    failedOcr: 0,
 
     setQuery: (q) => {
         set({ query: q });
