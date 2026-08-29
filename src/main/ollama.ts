@@ -7,7 +7,7 @@ import type { OllamaProgress } from "../shared/ollama";
 export type { OllamaProgress };
 
 const HOST = "http://127.0.0.1:11434";
-const MODEL = "glm-ocr";
+const MODEL = "maternion/LightOnOCR-2:1b";
 const RUNTIME_DIR = "electron-ollama";
 
 export type OllamaStatus = {
@@ -44,9 +44,11 @@ const hasModel = async (): Promise<boolean> => {
     const data = (await res.json()) as {
         models?: { name?: string }[];
     };
-    return (data.models ?? []).some(
-        (m) => m.name === MODEL || m.name?.startsWith(`${MODEL}:`),
-    );
+    const want = MODEL.toLowerCase();
+    return (data.models ?? []).some((m) => {
+        const name = m.name?.toLowerCase();
+        return name === want || name?.startsWith(`${want}:`);
+    });
 };
 
 const pullModel = async (): Promise<void> => {
@@ -213,7 +215,7 @@ export async function ensureOllamaModel(): Promise<{ ok: true }> {
     return r;
 }
 
-/** OCR one image (base64, no data: prefix) via local glm-ocr. */
+/** OCR one image (base64, no data: prefix) via local LightOnOCR-2. */
 export async function ocrGenerate(imageB64: string): Promise<string> {
     const res = await fetch(`${HOST}/api/generate`, {
         method: "POST",
@@ -221,8 +223,7 @@ export async function ocrGenerate(imageB64: string): Promise<string> {
         signal: AbortSignal.timeout(5 * 60_000),
         body: JSON.stringify({
             model: MODEL,
-            // [img-0] required on some Ollama builds for glm-ocr renderer
-            prompt: "Text Recognition: [img-0]",
+            prompt: "",
             images: [imageB64],
             stream: false,
         }),
@@ -231,7 +232,7 @@ export async function ocrGenerate(imageB64: string): Promise<string> {
         const body = await res.text().catch(() => "");
         throw new Error(
             res.status === 404
-                ? "glm-ocr model not present"
+                ? "LightOnOCR-2 model not present"
                 : `Ollama generate failed: ${res.status}${body ? ` ${body.slice(0, 200)}` : ""}`,
         );
     }

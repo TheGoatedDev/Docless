@@ -26,7 +26,7 @@ flowchart LR
   main --> settings[(userData/settings.json)]
   main --> watch[chokidar per watchPath]
   watch --> docless["root/.docless/docless.sqlite"]
-  main --> ollama[Ollama localhost glm-ocr]
+  main --> ollama[Ollama localhost LightOnOCR-2]
   main --> ocr[OCR drain pending rows]
   ocr --> ollama
   ocr --> docless
@@ -41,7 +41,7 @@ flowchart LR
 4. Root route `beforeLoad` boots Ollama:
    - Binary already on disk → quiet ensure runtime + model.
    - First run → `/setup/1-ollama` then `/setup/2-ocr-model`.
-5. Ready when Ollama is running and `glm-ocr` is present → app routes.
+5. Ready when Ollama is running and `maternion/LightOnOCR-2:1b` is present → app routes.
 
 ## Windows
 
@@ -61,7 +61,7 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 | `<watchRoot>/.docless/docless.sqlite` | Per-root library DB (ADR 0008) |
 | `<watchRoot>/.docless/.gitignore` | `*` so sidecar junk stays out of git |
 | `userData/electron-ollama/` | Managed Ollama binary (when installed by app) |
-| Ollama’s own model store | `glm-ocr` weights (not under app control) |
+| Ollama’s own model store | `maternion/LightOnOCR-2:1b` weights (not under app control) |
 
 ### Sidecar DB (ADR 0008)
 
@@ -72,7 +72,7 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 - **documents columns:** `path`, `mtime_ms`, `size`, `content_hash`, `ocr_status`, `ocr_error`, `text`, `created_at_ms`, `updated_at_ms`.
 - **ocr_status:** `pending` \| `running` \| `done` \| `failed` \| `skipped`.
 - **Change detect:** mtime+size gate → SHA-256; hash change → `pending`, keep old `text` until new OCR succeeds.
-- **OCR:** main pool (`src/main/ocr.ts`, concurrency 2) claims `pending` → `running`, calls local `glm-ocr` via Ollama `/api/generate` only (`127.0.0.1`), writes `text` + `done` or `ocr_error` + `failed`. Images (png/jpg/jpeg/webp/gif) as-is; PDF every page rasterized (`pdfjs-dist` + `@napi-rs/canvas`) then OCR’d and joined with `\n\n`. heic/tif/tiff → failed with clear error. Kick on track pending + model ready; refill when a job finishes. Stale `running` reset to `pending` on boot. No claim while Ollama/model down (stays pending). Transient fail (timeout / Ollama down): auto-requeue up to 2 more times (5s, 15s). Manual retry: `failed` → `pending` via `documents.retry` (UI Retry on failed rows) or `documents.retryAll` (Retry all failed on the documents page, shown when any failed).
+- **OCR:** main pool (`src/main/ocr.ts`, concurrency 2) claims `pending` → `running`, calls local `maternion/LightOnOCR-2:1b` via Ollama `/api/generate` only (`127.0.0.1`), writes `text` + `done` or `ocr_error` + `failed`. Images (png/jpg/jpeg/webp/gif) as-is; PDF every page rasterized (`pdfjs-dist` + `@napi-rs/canvas`) then OCR’d and joined with `\n\n`. heic/tif/tiff → failed with clear error. Kick on track pending + model ready; refill when a job finishes. Stale `running` reset to `pending` on boot. No claim while Ollama/model down (stays pending). Transient fail (timeout / Ollama down): auto-requeue up to 2 more times (5s, 15s). Manual retry: `failed` → `pending` via `documents.retry` (UI Retry on failed rows) or `documents.retryAll` (Retry all failed on the documents page, shown when any failed).
 - **Delete:** unlink → hard delete row. Rename = new path (re-OCR).
 - **Migrate:** forward-only `PRAGMA user_version` TS steps in transactions; backup `docless.sqlite.bak-v{k}` before each step (keep ~2); refuse DB newer than app + notify. Corrupt open → quarantine `docless.sqlite.corrupt-<ts>` + fresh DB + notify.
 - **FTS (schema v2):** external-content `documents_fts` (FTS5 on `path` + `text`) kept in sync via AI/AD/AU triggers; backfill on migrate. Search unions open roots with `MATCH` (token prefix) + `bm25` order — local only, no remote index.

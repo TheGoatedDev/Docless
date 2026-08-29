@@ -31,7 +31,7 @@ function StepOcrModel(): React.JSX.Element {
                 <p className="text-muted-foreground text-sm">Step 2 of 2</p>
                 <h2 className="text-lg font-medium">OCR model</h2>
                 <p className="text-muted-foreground mt-1 text-sm">
-                    Download the glm-ocr model for document recognition.
+                    Download the LightOnOCR-2 model for document recognition.
                 </p>
             </div>
             <p className="text-sm">

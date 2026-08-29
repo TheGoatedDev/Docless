@@ -9,8 +9,8 @@ import { getOllamaStatus, ocrGenerate } from "./ollama";
 const logger = rootLogger.child({ mod: "ocr" });
 
 const IMAGE_EXT = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
-// ponytail: big scans crush glm-ocr; downscale before send
-const MAX_EDGE = 1280;
+// ponytail: LightOnOCR-2 wants longest edge ~1540px
+const MAX_EDGE = 1540;
 // ponytail: fixed pool; bump if Ollama keeps up without thrash
 const CONCURRENCY = 2;
 const MAX_ATTEMPTS = 3;

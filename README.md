@@ -6,7 +6,7 @@ Local-first document app: watch folders, keep metadata on disk, OCR on-device. N
 
 - You add watched paths.
 - Each watched root gets a `.docless` sidecar for Docless metadata.
-- OCR runs via local [Ollama](https://ollama.com) (`glm-ocr`).
+- OCR runs via local [Ollama](https://ollama.com) (`maternion/LightOnOCR-2:1b`).
 
 ## Status
 
