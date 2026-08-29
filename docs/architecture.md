@@ -9,14 +9,14 @@ Desktop app for local document handling: folders you choose stay on disk; OCR vi
 ## Process layout
 
 ```
-src/main/       Electron main: windows, tray, settings, watch, ollama, notify
+src/main/       Electron main: windows, tray, settings, watch, ollama, notify, update
 src/preload/    contextBridge → window.api
 src/renderer/   React UI (TanStack Router, Zustand, shadcn)
 ```
 
 | Layer | Owns |
 |-------|------|
-| **main** | FS, watchers, OS notifications, tray, Ollama lifecycle + OCR, `settings.json` |
+| **main** | FS, watchers, OS notifications, tray, Ollama lifecycle + OCR, `settings.json`, auto-update |
 | **preload** | Thin IPC surface; no business logic |
 | **renderer** | UI + client stores; talks only through `window.api` |
 
@@ -42,6 +42,7 @@ flowchart LR
    - Binary already on disk → quiet ensure runtime + model.
    - First run → `/setup/1-ollama` then `/setup/2-ocr-model`.
 5. Ready when Ollama is running and `maternion/LightOnOCR-2:1b` is present → app routes.
+6. Packaged build: check GitHub latest, download in background, `notifyMain` when ready, install on quit. Dev skips.
 
 ## Windows
 

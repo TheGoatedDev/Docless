@@ -9,6 +9,7 @@ import { registerNotifyIpc } from "./notify";
 import { startOcr } from "./ocr";
 import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
 import { loadSettings, registerSettingsIpc } from "./settings";
+import { startUpdates } from "./update";
 import { stopAllWatchers, syncWatchPaths } from "./watch";
 
 let mainWindow: BrowserWindow | null = null;
@@ -179,6 +180,7 @@ app.whenReady().then(() => {
     registerDocumentsIpc();
     syncWatchPaths(loadSettings().watchPaths);
     startOcr();
+    startUpdates();
 
     createTray();
     createMainWindow();
