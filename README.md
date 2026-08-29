@@ -37,6 +37,12 @@ pnpm dev
 Pre-commit: lint-staged (biome) + deps:check.  
 Commit-msg: conventional commits (commitlint).
 
+macOS builds are unsigned. If Gatekeeper says the app is damaged:
+
+```bash
+xattr -cr /Applications/Docless.app
+```
+
 ## Docs
 
 - [Architecture](docs/architecture.md) — as-built process map
