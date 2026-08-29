@@ -223,7 +223,7 @@ export async function ocrGenerate(imageB64: string): Promise<string> {
         signal: AbortSignal.timeout(5 * 60_000),
         body: JSON.stringify({
             model: MODEL,
-            prompt: "",
+            prompt: "Extract the text.",
             images: [imageB64],
             stream: false,
         }),

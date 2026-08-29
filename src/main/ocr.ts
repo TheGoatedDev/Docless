@@ -70,6 +70,22 @@ function resetRunning(): void {
     }
 }
 
+function requeueEmptyDone(): void {
+    for (const root of listLibraryRoots()) {
+        const db = getLibrary(root);
+        if (!db) continue;
+        const r = db
+            .prepare(
+                `UPDATE documents SET ocr_status = 'pending', ocr_error = NULL, updated_at_ms = ?
+         WHERE ocr_status = 'done' AND (text IS NULL OR TRIM(text) = '')`,
+            )
+            .run(Date.now());
+        if (r.changes) {
+            logger.info({ root, n: r.changes }, "requeue empty done → pending");
+        }
+    }
+}
+
 function hasPending(): boolean {
     for (const root of listLibraryRoots()) {
         const db = getLibrary(root);
@@ -214,9 +230,16 @@ async function runOne(job: Claim): Promise<void> {
                 );
             }
         }
-        finish(job.root, job.path, true, parts.join("\n\n"), null);
+        const text = parts.join("\n\n").trim();
+        if (!text) throw new Error("OCR returned no text");
+        finish(job.root, job.path, true, text, null);
         logger.info(
-            { root: job.root, path: job.path, pages: parts.length },
+            {
+                root: job.root,
+                path: job.path,
+                pages: parts.length,
+                chars: text.length,
+            },
             "ocr done",
         );
     } catch (e) {
@@ -330,5 +353,6 @@ export function startOcr(): void {
     if (started) return;
     started = true;
     resetRunning();
+    requeueEmptyDone();
     kickOcr();
 }
