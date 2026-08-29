@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/TheGoatedDev/Docless/compare/v1.2.0...v1.3.0) (2026-08-29)
+
+
+### Features
+
+* auto-retry transient OCR failures and retry-all button ([93fa760](https://github.com/TheGoatedDev/Docless/commit/93fa76036379ddd4151dd1ceca7f253c4886dd40))
+* auto-update from GitHub releases ([4aa98ad](https://github.com/TheGoatedDev/Docless/commit/4aa98ad04a8615fa69d834f01c50bba8b0a61b7e))
+* switch OCR model to LightOnOCR-2 ([e88ed95](https://github.com/TheGoatedDev/Docless/commit/e88ed95def3f5f2a6dae14cef2f8f4d684c7e38f))
+
+
+### Bug Fixes
+
+* ollama empty prompt loaded model instead of ocr ([2524386](https://github.com/TheGoatedDev/Docless/commit/2524386dd79b8e588c7922db2a7276faeadb3e8e))
+
 ## [1.2.0](https://github.com/TheGoatedDev/Docless/compare/v1.1.0...v1.2.0) (2026-08-19)
 
 
