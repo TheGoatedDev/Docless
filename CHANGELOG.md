@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.4.0](https://github.com/TheGoatedDev/Docless/compare/v1.3.0...v1.4.0) (2026-08-30)
+
+
+### Features
+
+* add afterPack script for macOS code signing and attribute removal ([fd3d71b](https://github.com/TheGoatedDev/Docless/commit/fd3d71bc492620ad3aa0e098b65c7fda9fdd7416))
+* auto-rename files after OCR with llama3.2:1b ([20218c0](https://github.com/TheGoatedDev/Docless/commit/20218c08fba694741cb938003c8982487722dc3d))
+* run auto-rename off the OCR pool ([a89f02a](https://github.com/TheGoatedDev/Docless/commit/a89f02a150a927f36fb69bb17aa938d337c7bedc))
+
+
+### Bug Fixes
+
+* require date, vendor, and what for auto-rename ([c0de1a3](https://github.com/TheGoatedDev/Docless/commit/c0de1a3f86400a3541a49cea042f552ea5151c6b))
+
+
+### Reverts
+
+* remove auto-rename ([ee9c8da](https://github.com/TheGoatedDev/Docless/commit/ee9c8da901c8f4ce0d063a3aeecd7192cf43a6b6))
+
 ## [1.3.0](https://github.com/TheGoatedDev/Docless/compare/v1.2.0...v1.3.0) (2026-08-29)
 
 
