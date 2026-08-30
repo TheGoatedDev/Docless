@@ -11,7 +11,6 @@
         "dev": "electron-vite dev",
         "start": "electron-vite preview",
         "build": "pnpm run typecheck && electron-vite build",
-        "test": "node --experimental-strip-types --test src/main/slug.test.ts",
         "typecheck": "pnpm run typecheck:node && pnpm run typecheck:web",
         "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
         "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",

@@ -3,7 +3,6 @@ import { createReadStream, existsSync, lstatSync } from "node:fs";
 import { extname, join, relative, sep } from "node:path";
 import { getLibrary } from "./db";
 import { notifyDocumentsChanged } from "./documents";
-import { isIgnored } from "./ignore";
 import { logger as rootLogger } from "./logger";
 import { clearOcrAttempts, kickOcr } from "./ocr";
 
@@ -59,7 +58,6 @@ type Row = {
 };
 
 export async function upsert(root: string, abs: string): Promise<void> {
-    if (isIgnored(root, abs)) return;
     const db = getLibrary(root);
     if (!db || !shouldTrack(root, abs)) return;
 
@@ -124,7 +122,6 @@ export async function upsert(root: string, abs: string): Promise<void> {
 }
 
 export function remove(root: string, abs: string): void {
-    if (isIgnored(root, abs)) return;
     const db = getLibrary(root);
     if (!db) return;
     const path = relPath(root, abs);

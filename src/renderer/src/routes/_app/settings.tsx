@@ -36,7 +36,7 @@ function Settings(): React.JSX.Element {
             <div>
                 <h1 className="font-heading text-xl font-medium">Settings</h1>
                 <p className="text-muted-foreground mt-1 text-sm">
-                    Watched folders and OCR rename.
+                    Folders Docless watches for documents.
                 </p>
             </div>
 
@@ -87,29 +87,6 @@ function Settings(): React.JSX.Element {
                         </ul>
                     )}
                 </CardContent>
-            </Card>
-
-            <Card size="sm">
-                <CardHeader>
-                    <CardTitle>Auto-rename</CardTitle>
-                    <CardDescription>
-                        After OCR, rename new files YYYY-MM-DD-Vendor-What.ext.
-                        Same folder. Existing files stay.
-                    </CardDescription>
-                    <CardAction>
-                        <input
-                            type="checkbox"
-                            className="size-4 accent-primary"
-                            checked={settings.autoRename}
-                            onChange={(e) =>
-                                void setSettings({
-                                    autoRename: e.target.checked,
-                                })
-                            }
-                            aria-label="Auto-rename files after OCR"
-                        />
-                    </CardAction>
-                </CardHeader>
             </Card>
         </div>
     );

@@ -7,11 +7,7 @@ import { registerDocumentsIpc } from "./documents";
 import { registerLogIpc } from "./logger";
 import { registerNotifyIpc } from "./notify";
 import { startOcr } from "./ocr";
-import {
-    ensureRenameModel,
-    registerOllamaIpc,
-    stopOllamaIfOwned,
-} from "./ollama";
+import { registerOllamaIpc, stopOllamaIfOwned } from "./ollama";
 import { loadSettings, registerSettingsIpc } from "./settings";
 import { startUpdates } from "./update";
 import { stopAllWatchers, syncWatchPaths } from "./watch";
@@ -184,7 +180,6 @@ app.whenReady().then(() => {
     registerDocumentsIpc();
     syncWatchPaths(loadSettings().watchPaths);
     startOcr();
-    if (loadSettings().autoRename) void ensureRenameModel();
     startUpdates();
 
     createTray();

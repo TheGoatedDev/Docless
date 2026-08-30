@@ -8,7 +8,6 @@ export type { OllamaProgress };
 
 const HOST = "http://127.0.0.1:11434";
 const MODEL = "maternion/LightOnOCR-2:1b";
-const RENAME_MODEL = "llama3.2:1b";
 const RUNTIME_DIR = "electron-ollama";
 
 export type OllamaStatus = {
@@ -39,25 +38,25 @@ const emit = (event: OllamaProgress): void => {
     }
 };
 
-const hasModel = async (name = MODEL): Promise<boolean> => {
+const hasModel = async (): Promise<boolean> => {
     const res = await fetch(`${HOST}/api/tags`);
     if (!res.ok) return false;
     const data = (await res.json()) as {
         models?: { name?: string }[];
     };
-    const want = name.toLowerCase();
+    const want = MODEL.toLowerCase();
     return (data.models ?? []).some((m) => {
-        const n = m.name?.toLowerCase();
-        return n === want || n?.startsWith(`${want}:`);
+        const name = m.name?.toLowerCase();
+        return name === want || name?.startsWith(`${want}:`);
     });
 };
 
-const pullModel = async (name = MODEL): Promise<void> => {
-    emit({ phase: "model", status: "pulling", percent: 0, message: name });
+const pullModel = async (): Promise<void> => {
+    emit({ phase: "model", status: "pulling", percent: 0, message: MODEL });
     const res = await fetch(`${HOST}/api/pull`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, stream: true }),
+        body: JSON.stringify({ name: MODEL, stream: true }),
     });
     if (!res.ok || !res.body) {
         throw new Error(`pull failed: ${res.status}`);
@@ -216,54 +215,6 @@ export async function ensureOllamaModel(): Promise<{ ok: true }> {
     return r;
 }
 
-export async function ensureRenameModel(): Promise<void> {
-    const { loadSettings } = await import("./settings");
-    if (!loadSettings().autoRename) return;
-    try {
-        const st = await getOllamaStatus();
-        if (!st.running) return;
-        if (await hasModel(RENAME_MODEL)) return;
-        await runBusy("model", () => pullModel(RENAME_MODEL));
-    } catch {
-        emit({
-            phase: "model",
-            status: "error",
-            message: `failed to pull ${RENAME_MODEL}`,
-        });
-    }
-}
-
-/** DATE/VENDOR/WHAT lines from full OCR text via local llama3.2:1b. */
-export async function nameGenerate(text: string): Promise<string> {
-    const res = await fetch(`${HOST}/api/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(2 * 60_000),
-        body: JSON.stringify({
-            model: RENAME_MODEL,
-            prompt: `Extract from the document. Reply with exactly three lines, nothing else. All three required. Never NONE.
-DATE: YYYY-MM-DD
-VENDOR: company or person name
-WHAT: short description of the document
-
-Document:
-${text}`,
-            stream: false,
-        }),
-    });
-    if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        throw new Error(
-            res.status === 404
-                ? "llama3.2:1b model not present"
-                : `Ollama generate failed: ${res.status}${body ? ` ${body.slice(0, 200)}` : ""}`,
-        );
-    }
-    const data = (await res.json()) as { response?: string; error?: string };
-    if (data.error) throw new Error(data.error);
-    return data.response?.trim() ?? "";
-}
-
 /** OCR one image (base64, no data: prefix) via local LightOnOCR-2. */
 export async function ocrGenerate(imageB64: string): Promise<string> {
     const res = await fetch(`${HOST}/api/generate`, {
@@ -304,7 +255,6 @@ export async function reinstallOllama(): Promise<{ ok: true }> {
     });
     const { kickOcr } = await import("./ocr");
     kickOcr();
-    void ensureRenameModel();
     return r;
 }
 

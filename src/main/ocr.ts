@@ -233,9 +233,6 @@ async function runOne(job: Claim): Promise<void> {
         const text = parts.join("\n\n").trim();
         if (!text) throw new Error("OCR returned no text");
         finish(job.root, job.path, true, text, null);
-        void import("./rename").then((m) =>
-            m.enqueueRename(job.root, job.path),
-        );
         logger.info(
             {
                 root: job.root,

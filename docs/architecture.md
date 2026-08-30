@@ -26,7 +26,7 @@ flowchart LR
   main --> settings[(userData/settings.json)]
   main --> watch[chokidar per watchPath]
   watch --> docless["root/.docless/docless.sqlite"]
-    main --> ollama[Ollama localhost OCR + llama3.2 rename]
+    main --> ollama[Ollama localhost LightOnOCR-2]
   main --> ocr[OCR drain pending rows]
   ocr --> ollama
   ocr --> docless
@@ -57,12 +57,12 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 
 | Path | Contents |
 |------|----------|
-| `app.getPath("userData")/settings.json` | App settings (`watchPaths`, `autoRename`) |
+| `app.getPath("userData")/settings.json` | App settings (`watchPaths: string[]`) |
 | `<watchRoot>/.docless/` | Sidecar dir (mkdir + layout on watch start) |
 | `<watchRoot>/.docless/docless.sqlite` | Per-root library DB (ADR 0008) |
 | `<watchRoot>/.docless/.gitignore` | `*` so sidecar junk stays out of git |
 | `userData/electron-ollama/` | Managed Ollama binary (when installed by app) |
-| Ollama’s own model store | `maternion/LightOnOCR-2:1b` + optional `llama3.2:1b` (not under app control) |
+| Ollama’s own model store | `maternion/LightOnOCR-2:1b` weights (not under app control) |
 
 ### Sidecar DB (ADR 0008)
 
@@ -70,19 +70,18 @@ Tray left-click toggles compact; right-click Open App / Quit. Closing all window
 - **Owner:** Electron main only (`better-sqlite3`, hand migrates). Renderer never opens the file.
 - **Identity:** canonical relative path (NFC, `/`, preserve case) = primary key (`src/main/track.ts`).
 - **Track:** allowlist (case-insensitive): `pdf`, `png`, `jpg`, `jpeg`, `webp`, `tif`, `tiff`, `heic`, `gif`. No symlink follow. Chokidar cold scan (`ignoreInitial: false`) + live add/change/unlink; prune missing rows on `ready`.
-- **documents columns:** `path`, `mtime_ms`, `size`, `content_hash`, `ocr_status`, `ocr_error`, `text`, `created_at_ms`, `updated_at_ms`, `auto_renamed` (schema v3).
+- **documents columns:** `path`, `mtime_ms`, `size`, `content_hash`, `ocr_status`, `ocr_error`, `text`, `created_at_ms`, `updated_at_ms`, unused `auto_renamed` (schema v3 leftover).
 - **ocr_status:** `pending` \| `running` \| `done` \| `failed` \| `skipped`.
 - **Change detect:** mtime+size gate → SHA-256; hash change → `pending`, keep old `text` until new OCR succeeds.
 - **OCR:** main pool (`src/main/ocr.ts`, concurrency 2) claims `pending` → `running`, calls local `maternion/LightOnOCR-2:1b` via Ollama `/api/generate` only (`127.0.0.1`), writes `text` + `done` or `ocr_error` + `failed`. Images (png/jpg/jpeg/webp/gif) as-is; PDF every page rasterized (`pdfjs-dist` + `@napi-rs/canvas`) then OCR’d and joined with `\n\n`. heic/tif/tiff → failed with clear error. Kick on track pending + model ready; refill when a job finishes. Stale `running` reset to `pending` on boot. No claim while Ollama/model down (stays pending). Transient fail (timeout / Ollama down): auto-requeue up to 2 more times (5s, 15s). Manual retry: `failed` → `pending` via `documents.retry` (UI Retry on failed rows) or `documents.retryAll` (Retry all failed on the documents page, shown when any failed).
-- **Auto-rename (ADR 0009):** if `autoRename` and `auto_renamed=0`, OCR `done` enqueues a rename job (does not hold an OCR slot). Job sends full OCR text to `llama3.2:1b` for DATE/VENDOR/WHAT, assembles `YYYY-MM-DD-Vendor-What` (all three required; document date else mtime; hyphens; keep ext; `-2`/`-3` on clash). Skip if any part missing. `fs.rename` same folder. UPDATE path then rename; ignore watcher unlink/add for that move. Fail/missing model leaves the file and flag unset. Finder rename still = new path (re-OCR).
-- **Delete:** unlink → hard delete row. Finder rename = new path (re-OCR). In-app auto-rename updates the PK.
+- **Delete:** unlink → hard delete row. Rename = new path (re-OCR).
 - **Migrate:** forward-only `PRAGMA user_version` TS steps in transactions; backup `docless.sqlite.bak-v{k}` before each step (keep ~2); refuse DB newer than app + notify. Corrupt open → quarantine `docless.sqlite.corrupt-<ts>` + fresh DB + notify.
 - **FTS (schema v2):** external-content `documents_fts` (FTS5 on `path` + `text`) kept in sync via AI/AD/AU triggers; backfill on migrate. Search unions open roots with `MATCH` (token prefix) + `bm25` order — local only, no remote index.
 - **Non-goals:** page table, rename-merge, multi-instance, global `userData` index.
 
 ## IPC (`window.api`)
 
-- `settings.get` / `settings.set` → `{ watchPaths: string[], autoRename: boolean }` (set also resyncs watchers; turning `autoRename` on pulls `llama3.2:1b`)
+- `settings.get` / `settings.set` → `{ watchPaths: string[] }` (set also resyncs watchers)
 - `dialog.openDirectory` → `string | null`
 - `ollama.ensureRuntime` / `ensureModel` / `reinstall` / `status` / `onProgress`
 - `documents.list` / `onChange` → union of open sidecars (name, root, path, ocrStatus, ocrError); push on track/watch/OCR changes
