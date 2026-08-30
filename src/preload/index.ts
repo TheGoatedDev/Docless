@@ -19,11 +19,12 @@ const api = {
         },
     },
     settings: {
-        get: (): Promise<{ watchPaths: string[] }> =>
+        get: (): Promise<{ watchPaths: string[]; autoRename: boolean }> =>
             ipcRenderer.invoke("settings:get"),
         set: (data: {
             watchPaths: string[];
-        }): Promise<{ watchPaths: string[] }> =>
+            autoRename: boolean;
+        }): Promise<{ watchPaths: string[]; autoRename: boolean }> =>
             ipcRenderer.invoke("settings:set", data),
     },
     ollama: {

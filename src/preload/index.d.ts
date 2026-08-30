@@ -15,10 +15,14 @@ declare global {
                 ) => void;
             };
             settings: {
-                get: () => Promise<{ watchPaths: string[] }>;
+                get: () => Promise<{
+                    watchPaths: string[];
+                    autoRename: boolean;
+                }>;
                 set: (data: {
                     watchPaths: string[];
-                }) => Promise<{ watchPaths: string[] }>;
+                    autoRename: boolean;
+                }) => Promise<{ watchPaths: string[]; autoRename: boolean }>;
             };
             ollama: {
                 ensureRuntime: () => Promise<{ ok: true }>;

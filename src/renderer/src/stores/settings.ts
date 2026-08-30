@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 export type Settings = {
     watchPaths: string[];
+    autoRename: boolean;
 };
 
 type State = {
@@ -13,7 +14,7 @@ type State = {
 
 export const useSettings = create<State>((set, get) => ({
     ready: false,
-    settings: { watchPaths: [] },
+    settings: { watchPaths: [], autoRename: false },
     hydrate: async () => {
         const settings = await window.api.settings.get();
         set({ settings, ready: true });

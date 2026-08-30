@@ -5,9 +5,10 @@ import { syncWatchPaths } from "./watch";
 
 export type Settings = {
     watchPaths: string[];
+    autoRename: boolean;
 };
 
-const defaults: Settings = { watchPaths: [] };
+const defaults: Settings = { watchPaths: [], autoRename: false };
 
 const file = (): string => join(app.getPath("userData"), "settings.json");
 
@@ -40,9 +41,13 @@ export function loadSettings(): Settings {
 }
 
 export function saveSettings(data: Settings): Settings {
+    const prev = loadSettings();
     const next = withDefaults(defaults, data) as Settings;
     writeFileSync(file(), JSON.stringify(next, null, 2));
     syncWatchPaths(next.watchPaths);
+    if (next.autoRename && !prev.autoRename) {
+        void import("./ollama").then((m) => m.ensureRenameModel());
+    }
     return next;
 }
 

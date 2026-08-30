@@ -14,7 +14,7 @@ import { notifyMain } from "../notify";
 
 const logger = rootLogger.child({ mod: "db" });
 
-export const APP_SCHEMA_VERSION = 2;
+export const APP_SCHEMA_VERSION = 3;
 
 const pools = new Map<string, Database.Database>();
 
@@ -63,6 +63,12 @@ const steps: Step[] = [
       INSERT INTO documents_fts(rowid, path, text)
         SELECT rowid, path, ifnull(text, '') FROM documents;
     `);
+    },
+    // v2 → v3: once-per-doc auto-rename flag
+    (db) => {
+        db.exec(
+            `ALTER TABLE documents ADD COLUMN auto_renamed INTEGER NOT NULL DEFAULT 0`,
+        );
     },
 ];
 
