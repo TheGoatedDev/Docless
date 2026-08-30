@@ -55,13 +55,10 @@ export function assembleStem(
     vendor: string,
     what: string,
 ): string {
-    const parts: string[] = [];
-    if (date) parts.push(date);
     const v = hyphenate(vendor);
     const w = hyphenate(what);
-    if (v) parts.push(v);
-    if (w) parts.push(w);
-    return parts.join("-");
+    if (!date || !v || !w) return "";
+    return `${date}-${v}-${w}`;
 }
 
 export function pickDest(

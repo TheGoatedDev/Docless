@@ -241,10 +241,10 @@ export async function nameGenerate(text: string): Promise<string> {
         signal: AbortSignal.timeout(2 * 60_000),
         body: JSON.stringify({
             model: RENAME_MODEL,
-            prompt: `Extract from the document. Reply with exactly three lines, nothing else:
-DATE: YYYY-MM-DD or NONE
-VENDOR: company or person name or NONE
-WHAT: short description of the document or NONE
+            prompt: `Extract from the document. Reply with exactly three lines, nothing else. All three required. Never NONE.
+DATE: YYYY-MM-DD
+VENDOR: company or person name
+WHAT: short description of the document
 
 Document:
 ${text}`,

@@ -53,14 +53,14 @@ test("parseNameFields NONE and extra chatter", () => {
     assert.deepEqual(p, { date: null, vendor: "", what: "Scanned letter" });
 });
 
-test("assembleStem partial", () => {
+test("assembleStem requires date vendor what", () => {
     assert.equal(
         assembleStem("2026-03-15", "Acme Corp", "Q3 Invoice"),
         "2026-03-15-Acme-Corp-Q3-Invoice",
     );
-    assert.equal(assembleStem(null, "Acme", "Invoice"), "Acme-Invoice");
-    assert.equal(assembleStem("2026-03-15", "", ""), "2026-03-15");
-    assert.equal(assembleStem(null, "", ""), "");
+    assert.equal(assembleStem(null, "Acme", "Invoice"), "");
+    assert.equal(assembleStem("2026-03-15", "", "Invoice"), "");
+    assert.equal(assembleStem("2026-03-15", "Acme", ""), "");
 });
 
 test("pickDest first free name", () => {
