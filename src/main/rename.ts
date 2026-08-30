@@ -6,23 +6,50 @@ import { ignorePath } from "./ignore";
 import { logger as rootLogger } from "./logger";
 import { nameGenerate } from "./ollama";
 import { loadSettings } from "./settings";
-import { pickDest, slugStem } from "./slug";
+import { assembleStem, dateFromMs, parseNameFields, pickDest } from "./slug";
 
 const logger = rootLogger.child({ mod: "rename" });
 
-export async function maybeRenameAfterOcr(
-    root: string,
-    path: string,
-    text: string,
-): Promise<void> {
+type Job = { root: string; path: string };
+
+const q: Job[] = [];
+let active = false;
+
+export function enqueueRename(root: string, path: string): void {
+    if (!loadSettings().autoRename) return;
+    q.push({ root, path });
+    void drain();
+}
+
+async function drain(): Promise<void> {
+    if (active) return;
+    const job = q.shift();
+    if (!job) return;
+    active = true;
+    try {
+        await runRename(job.root, job.path);
+    } catch (err) {
+        logger.warn({ ...job, err }, "rename job failed");
+    } finally {
+        active = false;
+        void drain();
+    }
+}
+
+async function runRename(root: string, path: string): Promise<void> {
     if (!loadSettings().autoRename) return;
     const db = getLibrary(root);
     if (!db) return;
     const row = db
-        .prepare("SELECT auto_renamed FROM documents WHERE path = ?")
-        .get(path) as { auto_renamed: number } | undefined;
+        .prepare(
+            "SELECT text, mtime_ms, auto_renamed FROM documents WHERE path = ?",
+        )
+        .get(path) as
+        | { text: string | null; mtime_ms: number; auto_renamed: number }
+        | undefined;
     if (!row || row.auto_renamed) return;
-    if (!text.trim()) return;
+    const text = row.text?.trim() ?? "";
+    if (!text) return;
 
     let raw: string;
     try {
@@ -31,7 +58,9 @@ export async function maybeRenameAfterOcr(
         logger.warn({ root, path, err }, "name generate failed");
         return;
     }
-    const stem = slugStem(raw);
+    const fields = parseNameFields(raw);
+    const date = fields.date ?? dateFromMs(row.mtime_ms);
+    const stem = assembleStem(date, fields.vendor, fields.what);
     if (!stem) return;
 
     const ext = posix.extname(path);

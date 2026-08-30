@@ -93,8 +93,8 @@ function Settings(): React.JSX.Element {
                 <CardHeader>
                     <CardTitle>Auto-rename</CardTitle>
                     <CardDescription>
-                        After OCR, rename new files with llama3.2:1b. Slug, same
-                        folder. Existing files stay.
+                        After OCR, rename new files YYYY-MM-DD-Vendor-What.ext.
+                        Same folder. Existing files stay.
                     </CardDescription>
                     <CardAction>
                         <input

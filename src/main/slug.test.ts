@@ -1,28 +1,66 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { pickDest, slugStem } from "./slug.ts";
+import {
+    assembleStem,
+    dateFromMs,
+    hyphenate,
+    parseDate,
+    parseNameFields,
+    pickDest,
+} from "./slug.ts";
 
-test("slugStem lowercases and hyphenates", () => {
-    assert.equal(slugStem("Invoice Acme 2026"), "invoice-acme-2026");
+test("hyphenate keeps case, spaces to hyphens", () => {
+    assert.equal(hyphenate("Acme Corp"), "Acme-Corp");
+    assert.equal(hyphenate("Q3 Invoice"), "Q3-Invoice");
 });
 
-test("slugStem strips quotes and extension", () => {
-    assert.equal(slugStem('"Invoice.pdf"'), "invoice");
+test("hyphenate strips illegal fs chars", () => {
+    assert.equal(hyphenate('Acme/Corp: "Inc"'), "Acme-Corp-Inc");
 });
 
-test("slugStem uses first non-empty line", () => {
-    assert.equal(slugStem("\nFoo Bar\nbaz"), "foo-bar");
+test("hyphenate empty garbage", () => {
+    assert.equal(hyphenate("..."), "...");
+    assert.equal(hyphenate(""), "");
+    assert.equal(hyphenate("///"), "");
 });
 
-test("slugStem empty garbage", () => {
-    assert.equal(slugStem("..."), "");
-    assert.equal(slugStem(""), "");
+test("parseDate accepts YYYY-MM-DD", () => {
+    assert.equal(parseDate("2026-03-15"), "2026-03-15");
+    assert.equal(parseDate("NONE"), null);
+    assert.equal(parseDate("15/03/2026"), null);
+    assert.equal(parseDate("2026-13-01"), null);
 });
 
-test("slugStem caps at 80 and no trailing hyphen", () => {
-    const s = slugStem(`${"A".repeat(90)}-`);
-    assert.equal(s.length, 80);
-    assert.ok(!s.endsWith("-"));
+test("dateFromMs local calendar day", () => {
+    assert.equal(dateFromMs(new Date(2026, 2, 15).getTime()), "2026-03-15");
+});
+
+test("parseNameFields three lines", () => {
+    const p = parseNameFields(
+        "DATE: 2026-03-15\nVENDOR: Acme Corp\nWHAT: Q3 Invoice",
+    );
+    assert.deepEqual(p, {
+        date: "2026-03-15",
+        vendor: "Acme Corp",
+        what: "Q3 Invoice",
+    });
+});
+
+test("parseNameFields NONE and extra chatter", () => {
+    const p = parseNameFields(
+        "Sure.\nDATE: NONE\nVENDOR: NONE\nWHAT: Scanned letter",
+    );
+    assert.deepEqual(p, { date: null, vendor: "", what: "Scanned letter" });
+});
+
+test("assembleStem partial", () => {
+    assert.equal(
+        assembleStem("2026-03-15", "Acme Corp", "Q3 Invoice"),
+        "2026-03-15-Acme-Corp-Q3-Invoice",
+    );
+    assert.equal(assembleStem(null, "Acme", "Invoice"), "Acme-Invoice");
+    assert.equal(assembleStem("2026-03-15", "", ""), "2026-03-15");
+    assert.equal(assembleStem(null, "", ""), "");
 });
 
 test("pickDest first free name", () => {

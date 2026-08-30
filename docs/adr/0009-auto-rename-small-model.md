@@ -1,6 +1,6 @@
 # Auto-rename with a small local text model
 
-After OCR succeeds, if `autoRename` is on, generate a slug filename with fixed Ollama tag `llama3.2:1b` and `fs.rename` in place. Sidecar path PK is updated first; watcher events for that move are ignored. Default off, future OCR only, once per row (`auto_renamed`). Not Finder rename-merge (ADR 0008). Still on-device, still a fixed tag (ADR 0003).
+After OCR succeeds, if `autoRename` is on, a separate queue asks `llama3.2:1b` for DATE/VENDOR/WHAT over the full OCR text and `fs.rename`s to `YYYY-MM-DD-Vendor-What.ext` (document date, else mtime, else omit; missing parts omitted; hyphens). Does not block the OCR pool. Sidecar path PK is updated first; watcher events for that move are ignored. Default off, future OCR only, once per row (`auto_renamed`). Not Finder rename-merge (ADR 0008). Still on-device, still a fixed tag (ADR 0003).
 
 **Status:** accepted
 

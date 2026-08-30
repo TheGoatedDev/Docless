@@ -233,15 +233,21 @@ export async function ensureRenameModel(): Promise<void> {
     }
 }
 
-/** Filename stem from OCR text via local llama3.2:1b. */
+/** DATE/VENDOR/WHAT lines from full OCR text via local llama3.2:1b. */
 export async function nameGenerate(text: string): Promise<string> {
     const res = await fetch(`${HOST}/api/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(2 * 60_000),
         body: JSON.stringify({
             model: RENAME_MODEL,
-            prompt: `Reply with only a filename stem. No extension, no quotes, no path, no explanation.\n\n${text.slice(0, 2000)}`,
+            prompt: `Extract from the document. Reply with exactly three lines, nothing else:
+DATE: YYYY-MM-DD or NONE
+VENDOR: company or person name or NONE
+WHAT: short description of the document or NONE
+
+Document:
+${text}`,
             stream: false,
         }),
     });
